@@ -1,0 +1,221 @@
+// Keccak256 hash function (ethereum version).
+// For LICENSE check https://github.com/vocdoni/keccak256-circom/blob/master/LICENSE
+
+pragma circom 2.0.0;
+
+include "./utils.circom";
+include "./permutations.circom";
+
+template Pad(nBits) {
+    signal input in[nBits];
+    var blockSize = 136*8;
+    var nBlocks = (nBits + blockSize) \ blockSize;
+    signal output out[nBlocks][blockSize];
+    signal out2[blockSize];
+
+    var i;
+    var j;
+    var k;
+
+    // 前nBlocks - 1均为input，赋值给out
+    for (i = 0; i < nBlocks - 1; i++) {
+        for (j = 0; j < blockSize; j++) {
+            out[i][j] <== in[i * blockSize + j];
+        }
+    }
+    
+    var remainInput = nBits - (nBlocks - 1) * blockSize;
+    for (i = 0; i < remainInput; i++) {
+        out2[i] <== in[(nBlocks - 1) * blockSize + i];
+    }
+
+    var domain = 0x01;
+    for (i = remainInput; i < remainInput + 8; i++) {
+         out2[i] <== (domain >> i) & 1;
+    }
+    for (i = remainInput + 8; i < blockSize; i++) {
+        out2[i] <== 0;
+    }
+
+    component aux = OrArray(8);
+    for (i = 0; i < 8; i++) {
+        aux.a[i] <== out2[blockSize - 8 +i];
+        aux.b[i] <== (0x80 >> i) & 1;
+    }
+    for (i = 0; i < 8; i++) {
+        out[nBlocks - 1][blockSize - 8 + i] <== aux.out[i];
+    }
+
+    for (i = 0; i < blockSize - 8; i++) {
+        out[nBlocks - 1][i] <== out2[i];
+    }
+}
+
+template KeccakfRound(r) {
+    signal input in[25*64];
+    signal output out[25*64];
+    var i;
+
+    component theta = Theta();
+    component rhopi = RhoPi();
+    component chi = Chi();
+    component iota = Iota(r);
+
+    for (i=0; i<25*64; i++) {
+        theta.in[i] <== in[i];
+    }
+    for (i=0; i<25*64; i++) {
+        rhopi.in[i] <== theta.out[i];
+    }
+    for (i=0; i<25*64; i++) {
+        chi.in[i] <== rhopi.out[i];
+    }
+    for (i=0; i<25*64; i++) {
+        iota.in[i] <== chi.out[i];
+    }
+    for (i=0; i<25*64; i++) {
+        out[i] <== iota.out[i];
+    }
+}
+
+template Absorb(nBlocks) {
+    var blockSizeBytes = 136;
+    signal input s[25*64];
+    signal input blocks[nBlocks][blockSizeBytes*8];
+    signal output out[25*64];
+
+    var i;
+    var j;
+    var k;
+
+    component aux[nBlocks][blockSizeBytes/8];
+    component newS[nBlocks];
+
+    signal sIntermediate[nBlocks+1][25*64];
+
+    for (i = 0; i < 25*64; i++) {
+        sIntermediate[0][i] <== s[i];
+    }
+
+    for (k = 0; k < nBlocks; k++) {
+        newS[k] = Keccakf();
+
+        for (i = 0; i < blockSizeBytes/8; i++) {
+            aux[k][i] = XorArray(64);
+            for (j = 0; j < 64; j++) {
+                aux[k][i].a[j] <== sIntermediate[k][i*64+j];
+                aux[k][i].b[j] <== blocks[k][i*64+j];
+            }
+            for (j = 0; j < 64; j++) {
+                newS[k].in[i*64+j] <== aux[k][i].out[j];
+            }
+        }
+
+        for (i = (blockSizeBytes/8)*64; i < 25*64; i++) {
+            newS[k].in[i] <== sIntermediate[k][i];
+        }
+
+        for (i = 0; i < 25*64; i++) {
+            sIntermediate[k+1][i] <== newS[k].out[i];
+        }
+    }
+
+    for (i = 0; i < 25*64; i++) {
+        out[i] <== sIntermediate[nBlocks][i];
+    }
+}
+
+template Final(nBits) {
+    signal input in[nBits];
+    signal output out[25*64];
+    var blockSize = 136*8;
+    var nBlocks = (nBits + blockSize - 1) \ blockSize;
+    var i;
+    var j;
+    
+    // Pad the input
+    component pad = Pad(nBits);
+    for (i = 0; i < nBits; i++) {
+        pad.in[i] <== in[i];
+    }
+    
+    // Absorb the padded blocks
+    component abs = Absorb(nBlocks);
+    for (i = 0; i < 25*64; i++) {
+        abs.s[i] <== 0;
+    }
+    for (i = 0; i < nBlocks; i++) {
+        for (j = 0; j < blockSize; j++) {
+            abs.blocks[i][j] <== pad.out[i][j];
+        }
+    }
+    
+    // Output the final state
+    for (i = 0; i < 25*64; i++) {
+        out[i] <== abs.out[i];
+    }
+}
+
+template Squeeze(nBits) {
+    signal input s[25*64];
+    signal output out[nBits];
+    var i;
+    var j;
+
+    for (i=0; i<25; i++) {
+        for (j=0; j<64; j++) {
+            if (i*64+j<nBits) {
+                out[i*64+j] <== s[i*64+j];
+            }
+        }
+    }
+}
+
+template Keccakf() {
+    signal input in[25*64];
+    signal output out[25*64];
+    var i;
+    var j;
+
+    // 24 rounds
+    component round[24];
+    signal midRound[24*25*64];
+    for (i=0; i<24; i++) {
+        round[i] = KeccakfRound(i);
+        if (i==0) {
+            for (j=0; j<25*64; j++) {
+                midRound[j] <== in[j];
+            }
+        }
+        for (j=0; j<25*64; j++) {
+            round[i].in[j] <== midRound[i*25*64+j];
+        }
+        if (i<23) {
+            for (j=0; j<25*64; j++) {
+                midRound[(i+1)*25*64+j] <== round[i].out[j];
+            }
+        }
+    }
+
+    for (i=0; i<25*64; i++) {
+        out[i] <== round[23].out[i];
+    }
+}
+
+template Keccak(nBitsIn, nBitsOut) {
+    signal input in[nBitsIn];
+    signal output out[nBitsOut];
+    var i;
+
+    component f = Final(nBitsIn);
+    for (i=0; i<nBitsIn; i++) {
+        f.in[i] <== in[i];
+    }
+    component squeeze = Squeeze(nBitsOut);
+    for (i=0; i<25*64; i++) {
+        squeeze.s[i] <== f.out[i];
+    }
+    for (i=0; i<nBitsOut; i++) {
+        out[i] <== squeeze.out[i];
+    }
+}
