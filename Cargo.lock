@@ -2681,6 +2681,7 @@ dependencies = [
  "ark-serialize 0.4.1",
  "ark-std 0.4.0",
  "chrono",
+ "eyre",
  "hex",
  "num-bigint",
  "rand",

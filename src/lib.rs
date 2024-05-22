@@ -1,5 +1,5 @@
-pub mod vc;
-pub mod prove_frontend;
-pub mod prove_backend;
-mod utils;
 mod crypro;
+pub mod prove_backend;
+pub mod prove_frontend;
+mod utils;
+pub mod vc;

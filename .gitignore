@@ -1,2 +1,3 @@
-output/*
-target/*
+output
+target
+node_modules

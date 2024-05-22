@@ -4,17 +4,26 @@ mod prove_frontend;
 mod utils;
 mod vc;
 
+use ark_bn254::Bn254;
+use ark_groth16::Groth16;
+use ark_std::rand::thread_rng;
 use chrono::NaiveDate;
 use num_bigint::BigInt;
 use prove_backend::{cal_witness, gen_proof, ver_proof};
-use prove_frontend::compile_circuit;
 use std::collections::HashMap;
 use std::env;
+use std::fs;
+use std::path::PathBuf;
 use vc::VC;
-use ark_std::rand::thread_rng;
-use ark_groth16::Groth16;
-use ark_bn254::Bn254;
 type GrothBn = Groth16<Bn254>;
+
+fn check_file(file_path: &PathBuf) {
+    if !fs::metadata(file_path).is_ok() {
+        eprintln!("Error: File '{:?}' does not exist.", file_path);
+        eprintln!("Run `./build_circuit.sh` to construct circuit parameters");
+        std::process::exit(1);
+    }
+}
 
 fn main() {
     // 1. 解析VC Json并计算编码和哈希
@@ -40,11 +49,13 @@ fn main() {
         .timestamp() as u64;
     println!("birth_date_threshold: {}", birth_date_threshold);
 
-    // 2. 编译电路
-    compile_circuit("./circuits/check_vc.circom", "output");
+    let current_dir = env::current_dir().expect("Failed to get current directory");
+
+    // 2. 检查电路
+    check_file(&current_dir.join("output/check_vc_js/check_vc.wasm"));
+    check_file(&current_dir.join("output/check_vc.r1cs"));
 
     // 3. 计算witness
-    let current_dir = env::current_dir().expect("Failed to get current directory");
     let mut inputs = HashMap::new();
     inputs.insert(
         "encodedVC".to_string(),
