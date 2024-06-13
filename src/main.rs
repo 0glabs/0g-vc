@@ -37,6 +37,8 @@ fn check_file(file_path: &PathBuf) {
 }
 
 fn main() {
+    #[cfg(feature = "cuda")]
+    ark_groth16::init_local_workspace();
     // 1. 解析VC Json并计算编码和哈希
     let vc_json = r#"{"name": "Alice", "age": 25, "birth_date": "20000101", "edu_level": 4, "serial_no": "1234567890"}"#;
     let vc: VC = serde_json::from_str(vc_json).unwrap();
