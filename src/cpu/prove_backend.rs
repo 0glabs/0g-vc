@@ -31,10 +31,7 @@ pub fn cal_witness(
     
     // println!("builder inputs:{:?}", builder.inputs);
     let circom = builder.build()?;
-    let pub_in = circom
-        .get_public_inputs()
-        .unwrap();
-    println!("public inputs:{:?}", pub_in);
+    let pub_in = circom.get_public_inputs().unwrap();
     Ok((circom, pub_in))
 }
 

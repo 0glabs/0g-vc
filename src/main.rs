@@ -1,5 +1,8 @@
+#[cfg(not(feature = "cuda"))]
+mod cpu;
 mod crypro;
-mod prove_backend;
+#[cfg(feature = "cuda")]
+mod gpu;
 mod prove_frontend;
 mod utils;
 mod vc;
@@ -8,14 +11,22 @@ use ark_bn254::Bn254;
 use ark_groth16::Groth16;
 use ark_std::rand::thread_rng;
 use chrono::NaiveDate;
+#[cfg(not(feature = "cuda"))]
+use cpu::prove_backend::{cal_witness, gen_proof, ver_proof};
+#[cfg(feature = "cuda")]
+use gpu::prove_backend::{cal_witness, gen_proof, ver_proof};
 use num_bigint::BigInt;
-use prove_backend::{cal_witness, gen_proof, ver_proof};
+use prove_frontend::compile_circuit;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 use vc::VC;
+#[cfg(not(feature = "cuda"))]
 type GrothBn = Groth16<Bn254>;
+#[cfg(feature = "cuda")]
+type GrothBn = Groth16;
+use std::time::Instant;
 
 fn check_file(file_path: &PathBuf) {
     if !fs::metadata(file_path).is_ok() {
@@ -80,12 +91,19 @@ fn main() {
         inputs,
     )
     .unwrap();
+    println!("Public inputs:{:?}", pub_in);
 
     // 3. 生成证明
     let mut rng = thread_rng();
     let params =
         GrothBn::generate_random_parameters_with_reduction(circuit.clone(), &mut rng).unwrap();
+    let now = Instant::now();
     let proof = gen_proof(circuit, &params, &mut rng);
+    let dur = now.elapsed().as_millis();
+    #[cfg(not(feature = "cuda"))]
+    println!("CPU took {}ms.", dur);
+    #[cfg(feature = "cuda")]
+    println!("GPU took {}ms.", dur);
 
     println!("Proof generated: {:?}", proof);
 
