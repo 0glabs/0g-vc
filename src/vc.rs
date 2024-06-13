@@ -1,5 +1,4 @@
 use super::utils::*;
-use ark_serialize::Read;
 use chrono::NaiveDate;
 use sha2::{Digest, Sha256};
 
@@ -65,36 +64,17 @@ impl VC {
     pub fn encode_for_hash(&self) -> EncodedVC {
         println!("birth_date: {}", self.birth_date());
         let birth_date_bytes = u64_to_u8_array(self.birth_date());
-        let mut name = "name"
-            .as_bytes()
-            .to_vec()
-            .into_iter()
-            .chain(encode_fixed_length(&self.name, NAME_MAX_LEN).unwrap())
-            .collect();
-        let mut age: Vec<u8> = "age"
-            .as_bytes()
-            .to_vec()
-            .into_iter()
-            .chain(std::iter::once(self.age))
-            .collect();
-        let mut birth_date = "birth"
-            .as_bytes()
-            .to_vec()
-            .into_iter()
-            .chain(birth_date_bytes.iter().cloned())
-            .collect();
-        let mut edu_level: Vec<u8> = "edu"
-            .as_bytes()
-            .to_vec()
-            .into_iter()
-            .chain(std::iter::once(self.edu_level))
-            .collect();
-        let mut serial_no = "serial"
-            .as_bytes()
-            .to_vec()
-            .into_iter()
-            .chain(hex_string_to_bytes(&self.serial_no, SERIAL_MAX_LEN).unwrap())
-            .collect();
+        let name = with_prefix(
+            "name",
+            encode_fixed_length(&self.name, NAME_MAX_LEN).unwrap(),
+        );
+        let age = with_prefix("age", std::iter::once(self.age));
+        let birth_date = with_prefix("birth", birth_date_bytes.into_iter());
+        let edu_level = with_prefix("edu", std::iter::once(self.edu_level));
+        let serial_no = with_prefix(
+            "serial",
+            hex_string_to_bytes(&self.serial_no, SERIAL_MAX_LEN).unwrap(),
+        );
         EncodedVC {
             name,
             age,
@@ -123,6 +103,15 @@ impl VC {
     //     .cloned()
     //     .collect::<Vec<u8>>()
     // }
+}
+
+fn with_prefix(prefix: &'static str, iter: impl IntoIterator<Item = u8>) -> Vec<u8> {
+    prefix
+        .as_bytes()
+        .iter()
+        .cloned()
+        .chain(iter.into_iter())
+        .collect()
 }
 
 impl EncodedVC {

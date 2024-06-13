@@ -330,9 +330,10 @@ dependencies = [
 [[package]]
 name = "ark-groth16"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20ceafa83848c3e390f1cbf124bc3193b3e639b3f02009e0e290809a501b95fc"
 dependencies = [
+ "ag-cuda-ec",
+ "ag-types",
+ "ark-bn254",
  "ark-crypto-primitives 0.4.0",
  "ark-ec 0.4.1",
  "ark-ff 0.4.1",
@@ -346,11 +347,9 @@ dependencies = [
 [[package]]
 name = "ark-groth16"
 version = "0.4.0"
-source = "git+https://github.com/0glabs/groth-16-gpu.git?rev=140fe599b23d6e0eaf2dcca29c9f02821ddca0bf#140fe599b23d6e0eaf2dcca29c9f02821ddca0bf"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20ceafa83848c3e390f1cbf124bc3193b3e639b3f02009e0e290809a501b95fc"
 dependencies = [
- "ag-cuda-ec",
- "ag-types",
- "ark-bn254",
  "ark-crypto-primitives 0.4.0",
  "ark-ec 0.4.1",
  "ark-ff 0.4.1",
@@ -2876,7 +2875,7 @@ dependencies = [
  "ark-crypto-primitives 0.3.0",
  "ark-ec 0.4.1",
  "ark-ff 0.4.1",
- "ark-groth16 0.4.0 (git+https://github.com/0glabs/groth-16-gpu.git?rev=140fe599b23d6e0eaf2dcca29c9f02821ddca0bf)",
+ "ark-groth16 0.4.0",
  "ark-serialize 0.4.1",
  "ark-std 0.4.0",
  "chrono",

@@ -1,8 +1,5 @@
-#[cfg(not(feature = "cuda"))]
-mod cpu;
-mod crypro;
-#[cfg(feature = "cuda")]
-mod gpu;
+pub mod crypro;
+mod prove_backend;
 mod prove_frontend;
 mod utils;
 mod vc;
@@ -11,21 +8,14 @@ use ark_bn254::Bn254;
 use ark_groth16::Groth16;
 use ark_std::rand::thread_rng;
 use chrono::NaiveDate;
-#[cfg(not(feature = "cuda"))]
-use cpu::prove_backend::{cal_witness, gen_proof, ver_proof};
-#[cfg(feature = "cuda")]
-use gpu::prove_backend::{cal_witness, gen_proof, ver_proof};
 use num_bigint::BigInt;
-use prove_frontend::compile_circuit;
+use prove_backend::{cal_witness, gen_proof, ver_proof};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 use vc::VC;
-#[cfg(not(feature = "cuda"))]
-type GrothBn = Groth16<Bn254>;
-#[cfg(feature = "cuda")]
-type GrothBn = Groth16;
+type GrothBn = Groth16<Bn254, ark_groth16::gpu::GpuDomain>;
 use std::time::Instant;
 
 fn check_file(file_path: &PathBuf) {
@@ -43,7 +33,7 @@ fn main() {
     let vc_json = r#"{"name": "Alice", "age": 25, "birth_date": "20000101", "edu_level": 4, "serial_no": "1234567890"}"#;
     let vc: VC = serde_json::from_str(vc_json).unwrap();
     // 1.1. 计算vc编码和哈希
-    let (encoded_vc, hash) = vc.hash();
+    let (encoded_vc, _hash) = vc.hash();
     let circuit_input = encoded_vc.join();
     // 1.2. 计算birthDateThreshold的编码
     let encoded_birth_date = vc.birth_date();

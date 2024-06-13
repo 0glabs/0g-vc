@@ -10,9 +10,10 @@ use num_bigint::BigInt;
 use std::collections::HashMap;
 use std::path::Path;
 
-use ark_groth16::{prepare_verifying_key, Groth16, Proof, ProvingKey};
-type GrothBn = Groth16<Bn254>;
-use ark_std::rand::{thread_rng, Rng};
+use ark_groth16::{verifier::prepare_verifying_key, Proof, ProvingKey};
+use ark_std::rand::Rng;
+
+use crate::GrothBn;
 
 pub fn cal_witness(
     wtns: impl AsRef<Path>,
@@ -28,7 +29,7 @@ pub fn cal_witness(
             builder.push_input(&name, value);
         }
     }
-    
+
     // println!("builder inputs:{:?}", builder.inputs);
     let circom = builder.build()?;
     let pub_in = circom.get_public_inputs().unwrap();
@@ -51,7 +52,9 @@ pub fn ver_proof(pk: &ProvingKey<Bn254>, proof: &Proof<Bn254>, public_inputs: &V
 #[cfg(test)]
 mod test {
     use super::*;
+    use rand::thread_rng;
     use std::env;
+
     #[test]
     fn simple_example_cal_witness_work() {
         let current_dir = env::current_dir().expect("Failed to get current directory");
@@ -60,7 +63,7 @@ mod test {
 
         inputs.insert("in".to_string(), vec![BigInt::from(3), BigInt::from(11)]);
 
-        let (circuit, pub_in) = cal_witness(
+        let (_circuit, pub_in) = cal_witness(
             current_dir.join("output/example_js/example.wasm"),
             current_dir.join("output/example.r1cs"),
             inputs,

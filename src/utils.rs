@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 pub fn u8_to_bits(value: u8) -> Vec<bool> {
     let mut bits = Vec::new();
     for i in 0..8 {

@@ -1,11 +1,7 @@
 use ark_bn254::{Fq, Fr, G1Affine as GAffine, G1Projective as GProjective};
 use std::str::FromStr;
-// fn to_bytes(point: GAffine) -> Vec<u8> {
-//     let mut bytes = point.x.to_bytes_le().to_vec();
-//     bytes.extend_from_slice(&point.y.to_bytes_le());
-//     bytes
-// }
 
+#[allow(dead_code)]
 fn bits_to_bytes(bits: &[bool]) -> Vec<u8> {
     let mut bytes = Vec::new();
     for bits in bits.chunks(8) {

@@ -1,6 +1,7 @@
 use std::env;
 use std::process::Command;
 
+#[allow(dead_code)]
 pub fn compile_circuit(input_file: &str, output_dir: &str) {
     // 指定要执行的 Shell 文件路径
     let project_dir = env::current_dir().expect("Failed to get current directory");
