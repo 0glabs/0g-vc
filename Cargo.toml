@@ -7,8 +7,8 @@ edition = "2021"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 ark-circom = { git = "https://github.com/gakonst/ark-circom.git" }
-# ark-groth16 = { git = "https://github.com/0glabs/groth-16-gpu.git", features = ["parallel"], rev = "140fe599b23d6e0eaf2dcca29c9f02821ddca0bf" }
-ark-groth16 = { path = "../groth-16-gpu", features = ["parallel"] }
+# ark-groth16 = { git = "https://github.com/0glabs/groth16-gpu.git", features = ["parallel"], rev = "140fe599b23d6e0eaf2dcca29c9f02821ddca0bf" }
+ark-groth16 = { path = "../groth16-gpu", features = ["parallel"] }
 ark-ff = "0.4.1"
 ark-serialize = "0.4"
 ark-ec = "0.4.1"
