@@ -21,15 +21,4 @@ pub fn compile_circuit(input_file: &str, output_dir: &str) {
 }
 
 #[cfg(test)]
-mod test {
-    // use super::*;
-    // #[test]
-    // fn simple_example_compile_work() {
-    //     compile_circuit("./circuits/test/example.circom", "output");
-    // }
-
-    // #[test]
-    // fn vc_compile_work() {
-    //     compile_circuit("./circuits/check_vc.circom", "output");
-    // }
-}
+mod test {}

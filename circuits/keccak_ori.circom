@@ -79,81 +79,70 @@ template KeccakfRound(r) {
     }
 }
 
-template Absorb(nBlocks) {
-    var blockSizeBytes = 136;
-    signal input s[25*64];
-    signal input blocks[nBlocks][blockSizeBytes*8];
-    signal output out[25*64];
+template Absorb() {
+    var blockSizeBytes=136;
 
+    signal input s[25*64];
+    signal input block[blockSizeBytes*8];
+    signal output out[25*64];
     var i;
     var j;
-    var k;
 
-    component aux[nBlocks][blockSizeBytes/8];
-    component newS[nBlocks];
+    component aux[blockSizeBytes/8];
+    component newS = Keccakf();
 
-    signal sIntermediate[nBlocks+1][25*64];
-
-    for (i = 0; i < 25*64; i++) {
-        sIntermediate[0][i] <== s[i];
-    }
-
-    for (k = 0; k < nBlocks; k++) {
-        newS[k] = Keccakf();
-
-        for (i = 0; i < blockSizeBytes/8; i++) {
-            aux[k][i] = XorArray(64);
-            for (j = 0; j < 64; j++) {
-                aux[k][i].a[j] <== sIntermediate[k][i*64+j];
-                aux[k][i].b[j] <== blocks[k][i*64+j];
-            }
-            for (j = 0; j < 64; j++) {
-                newS[k].in[i*64+j] <== aux[k][i].out[j];
-            }
+    for (i=0; i<blockSizeBytes/8; i++) {
+        aux[i] = XorArray(64);
+        for (j=0; j<64; j++) {
+            aux[i].a[j] <== s[i*64+j];
+            aux[i].b[j] <== block[i*64+j];
         }
-
-        for (i = (blockSizeBytes/8)*64; i < 25*64; i++) {
-            newS[k].in[i] <== sIntermediate[k][i];
-        }
-
-        for (i = 0; i < 25*64; i++) {
-            sIntermediate[k+1][i] <== newS[k].out[i];
+        for (j=0; j<64; j++) {
+            newS.in[i*64+j] <== aux[i].out[j];
         }
     }
-
-    for (i = 0; i < 25*64; i++) {
-        out[i] <== sIntermediate[nBlocks][i];
+    // fill the missing s that was not covered by the loop over
+    // blockSizeBytes/8
+    for (i=(blockSizeBytes/8)*64; i<25*64; i++) {
+            newS.in[i] <== s[i];
+    }
+    for (i=0; i<25*64; i++) {
+        out[i] <== newS.out[i];
     }
 }
 
 template Final(nBits) {
     signal input in[nBits];
-    signal output out[25*64];
-    var blockSize = 136*8;
-    var nBlocks = (nBits + blockSize - 1) \ blockSize;
+    signal output out[25 * 64];
+    var blockSize = 136 * 8;
     var i;
     var j;
-    
-    // Pad the input
+    var nBlocks = (nBits + blockSize) \ blockSize;
+
+    // pad
     component pad = Pad(nBits);
-    for (i = 0; i < nBits; i++) {
+    for (i=0; i<nBits; i++) {
         pad.in[i] <== in[i];
     }
     
-    // Absorb the padded blocks
-    component abs = Absorb(nBlocks);
-    for (i = 0; i < 25*64; i++) {
-        abs.s[i] <== 0;
-    }
-    for (i = 0; i < nBlocks; i++) {
-        for (j = 0; j < blockSize; j++) {
-            abs.blocks[i][j] <== pad.out[i][j];
+    // absorb
+    component abs[nBlocks];
+    for (i=0; i<nBlocks; i++) {
+        abs[i] = Absorb();
+        for (j=0; j<blockSize; j++) {
+            abs[i].block[j] <== pad.out[i][j];
+        }
+        for (j=0; j<25*64; j++) {
+            if (i > 0) {
+                abs[i].s[j] <== abs[i - 1].out[j];
+            } else {
+                abs[i].s[j] <== 0;
+            }
         }
     }
-    
-    // Output the final state
-    for (i = 0; i < 25*64; i++) {
-        out[i] <== abs.out[i];
+
+    for (i=0; i<25*64; i++) {
+        out[i] <== abs[nBlocks - 1].out[i];
     }
 }
 

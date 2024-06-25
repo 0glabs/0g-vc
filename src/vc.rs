@@ -1,6 +1,10 @@
+use core::num;
+use std::result;
+
 use super::utils::*;
 use chrono::NaiveDate;
-use sha2::{Digest, Sha256};
+// use sha2::{Digest, Sha256};
+use tiny_keccak::{Keccak, Hasher};
 
 use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
@@ -36,17 +40,17 @@ impl VC {
         assert!(encoded_vc.birth_date.len() == 8 + 5);
         assert!(encoded_vc.edu_level.len() == 1 + 3);
         assert!(encoded_vc.serial_no.len() == SERIAL_MAX_LEN + 6);
-        let input = encoded_vc.join();
+        let mut input = encoded_vc.join();
         assert!(input.len() == 79);
 
-        // 创建 SHA-256 散列器
-        let mut hasher = Sha256::new();
+        // 填充输入数据到 256 字节
+        input.resize(256, 0x00);
+        assert!(input.len() == 256);
 
-        // 将数据输入散列器
-        hasher.update(input.clone());
-
-        // 计算散列值
-        let result = hasher.finalize();
+        let mut hasher = Keccak::v256();
+        hasher.update(&input.as_slice());
+        let mut result = [0u8; 32];
+        hasher.finalize(&mut result);
 
         // 将散列值转换为十六进制字符串表示形式
         (encoded_vc, result.iter().map(|byte| *byte).collect())
@@ -83,26 +87,6 @@ impl VC {
             serial_no,
         }
     }
-
-    // pub fn prepare_for_hash(&self) -> Vec<u8> {
-    //     // 将"20000304"格式的日期字符串转为Unix时间戳
-    //     let birth_date_bytes = u64_to_u8_array(self.birth_date());
-    //     [
-    //         encode_fixed_length(&self.name, NAME_MAX_LEN)
-    //             .unwrap()
-    //             .as_slice(),
-    //         [self.age].as_slice(),
-    //         birth_date_bytes.as_slice(),
-    //         [self.edu_level].as_slice(),
-    //         hex_string_to_bytes(&self.serial_no, SERIAL_MAX_LEN)
-    //             .unwrap()
-    //             .as_slice(),
-    //     ]
-    //     .iter()
-    //     .flat_map(|&arr| arr.iter())
-    //     .cloned()
-    //     .collect::<Vec<u8>>()
-    // }
 }
 
 fn with_prefix(prefix: &'static str, iter: impl IntoIterator<Item = u8>) -> Vec<u8> {
@@ -126,6 +110,36 @@ impl EncodedVC {
         result.extend_from_slice(&self.serial_no);
         result
     }
+}
+
+use ark_bn254::Fr;
+pub fn pub_input_without_witness(
+    birth_date_threshold: String,
+    target_leaf_hash: Vec<u8>
+) -> (Fr, Fr) {
+    use ark_ff::PrimeField;
+    use num_bigint::{BigUint, BigInt, Sign};
+    use num_traits::Signed;
+
+    let birth_date_threshold = BigInt::from(NaiveDate::parse_from_str(birth_date_threshold.as_str(), "%Y%m%d")
+        .expect("Invalid birth date string")
+        .and_hms_opt(0, 0, 0)
+        .unwrap()
+        .and_utc()
+        .timestamp() as u64);
+    
+    let modulus = <Fr as PrimeField>::MODULUS;
+
+    let birth_date_threshold = if birth_date_threshold.sign() == num_bigint::Sign::Minus {
+        let birth_date_threshold_abs = birth_date_threshold.abs().to_biguint().unwrap();
+        BigUint::from(modulus) - birth_date_threshold_abs
+    } else {
+        birth_date_threshold.to_biguint().unwrap()
+    };
+
+    let target_leaf_hash = BigUint::from_bytes_le(&target_leaf_hash);
+
+    (Fr::from(birth_date_threshold), Fr::from(target_leaf_hash))
 }
 
 #[cfg(test)]

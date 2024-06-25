@@ -1,14 +1,15 @@
-# 背景
+# Background
 
-提供 ZK 工具，允许0G用户使用 ZK 工具对可验证证书的字段进行任意粒度的展示、证明。
-例如，用户在0G上存有包括：姓名，年龄，出生日期，学历代号等字段的可验证证书，用户希望向他人展示其是00后。
+Provide ZK tools that allow 0G users to use ZK tools to display and prove arbitrary granularity of fields in verifiable certificates.
+For example, a user has a verifiable certificate on 0G that includes fields such as name, age, date of birth, and education level code. The user wants to show others that he/she was born after 2000.
 
-# 设计
+# Design
 
-## 证书格式
+## Certificate Format
 
-可验证证书至少应包含一个serial_no字段，用于确定证书的所有权，知晓serial_no的用户持有该证书。证书的其他字段因其是什么证书存在差异，可定制。serial_no的另一作用是防止穷举推测隐私字段。这里以学历证书为例对证书格式做说明。
-学历证书包含姓名，年龄，出生日期，学历代号字段：
+Verifiable certificates should contain at least a serial_no field to determine the ownership of the certificate. Users who know the serial_no own the certificate. Other fields in the certificate vary depending on what the certificate is and can be customized. The serial_no also serves to prevent exhaustive guessing of private fields. Here, an academic certificate is used as an example to illustrate the certificate format.
+
+An academic certificate contains the fields of name, age, date of birth, and education level code:
 ```rust
 pub struct VC {
     name: String,
@@ -18,7 +19,7 @@ pub struct VC {
     serial_no: String,
 }
 ```
-证书各字段应做合适编码，方便后续哈希，编码后的VC格式如下：
+The fields of the certificate should be properly encoded to facilitate subsequent hashing. The format of the encoded VC is as follows:
 ```rust
 pub struct EncodedVC {
     name: Vec<u8>, // 4+16bytes
@@ -29,61 +30,69 @@ pub struct EncodedVC {
 }
 ```
 
-- name：前缀为"name"，主体部分使用UTF-8编码，长度16字节。
-- 年龄：前缀为"age", 主体部分使用u8类型。
-- 出生日期：前缀为"birth", 主体部分使用Unix时间戳表示，长度为8字节（u64）。
-- 学历代号：前缀为"edu", 主体部分使用u8类型。
-- 随序列号：前缀为"serial", 主体部分使用hexString类型，32字节。
+- name: The prefix is "name", and the main part is encoded using UTF-8 with a length of 16 bytes.
+- age: The prefix is "age", and the main part uses the u8 type.
+- birth_date: The prefix is "birth", and the main part is represented using a Unix timestamp with a length of 8 bytes (u64).
+- edu_level: The prefix is "edu", and the main part uses the u8 type.
+- serial_no: The prefix is "serial", and the main part uses the hexString type with a length of 32 bytes.
 
-编码后VC有效数据部分为79字节，padding到256字节。
+The effective data part of the encoded VC is 79 bytes, padded to 256 bytes.
 ![Screenshot 2024-05-21 at 14.53.23.png](https://cdn.nlark.com/yuque/0/2024/png/2564997/1716274410323-b8a8e4fd-f9c2-4e48-9336-e34f43ee3468.png#averageHue=%23ededed&clientId=u4e87bca3-f673-4&from=drop&id=ub57c7a25&originHeight=286&originWidth=2344&originalType=binary&ratio=2&rotation=0&showTitle=false&size=133204&status=done&style=none&taskId=ude550725-cda6-40f7-b45d-11e6a6e2a3d&title=)
-EVC(Encoded VC)经过哈希得到VC tree的叶子leaf，多个VC向上计算得到根哈希root。这里使用的哈希函数为Keccak。EVC到leaf的计算采用Keccak(256*8, 256)，中间节点计算采用Keccak(256*2, 256)。
+
+The leaf of the VC tree is obtained by hashing the EVC (Encoded VC), and the root hash is calculated upward from multiple VCs. The hash function used here is Keccak. The calculation from EVC to leaf uses Keccak(256*8, 256), and the calculation of intermediate nodes uses Keccak(256*2, 256).
+
 ![Screenshot 2024-05-21 at 15.14.43.png](https://cdn.nlark.com/yuque/0/2024/png/2564997/1716275690140-ed2a21fa-24e5-4950-af8e-569291af3fd3.png#averageHue=%23f4f4f4&clientId=u4e87bca3-f673-4&from=drop&id=ue90c49cb&originHeight=1024&originWidth=1652&originalType=binary&ratio=2&rotation=0&showTitle=false&size=271073&status=done&style=none&taskId=u5071e7dd-9ca0-4985-a2de-81f78e32398&title=)
 
-## 电路约束
+## Circuit Constraints
 
-VC tree的root哈希存储在0G上，用户想要证明字段属性（如00后出生）时通过证明：
+The root hash of the VC tree is stored on 0G. When a user wants to prove field properties (such as being born after 2000), they can prove:
 
-1. birth_date字段大于(编码后的)20000101
-2. VC tree root哈希等于0G上存储的哈希
+1. The birth_date field is greater than (encoded) 20000101.
+2. The VC tree root hash is equal to the hash stored on 0G.
 
-以上2个断言均成立即可。
+If both of the above assertions hold, the proof is valid.
 
-# 实践
+# Practice
 
-## 快速开始
+## Quick Start
 
-1. 安装 Yarn
+1. Install Yarn
 
-2. 安装 circom 并构建电路
+2. Install circom and build the circuit
 ```bash
 yarn
 yarn build
 ```
 
-3. 运行 demo
+3. Run the demo
 ```bash
 cargo run --release
 ```
+If you want to enable the GPU, you can enable the cuda feature
+```bash
+cargo run --release --features="cuda"
+```
 
-## 项目依赖
+## Project Dependencies
 
-- circom compiler：项目前端电路编译部分依赖于circom compiler，安装过程嵌在frontend.sh脚本中。
-- circomlib：项目电路构建于circomlib提供的一些库电路。在项目目录中执行`npm init`命令初始化一个新的 Node.js 项目。之后执行`npm install circomlib`安装电路库。
+- Circom compiler
+- Circomlib
+- Groth16-gpu
 
-## 项目结构
+## Project Structure
 
-项目目录如下
+The project directory is as follows:
 
 ![Screenshot 2024-05-21 at 15.27.24.png](https://cdn.nlark.com/yuque/0/2024/png/2564997/1716276450567-4af591fd-bdd0-453a-9055-a2da39ae3611.png#averageHue=%23222222&clientId=u4e87bca3-f673-4&from=drop&height=264&id=w2B6T&originHeight=668&originWidth=382&originalType=binary&ratio=2&rotation=0&showTitle=false&size=71638&status=done&style=none&taskId=ue3ac2436-99f1-4814-967f-3d367829a99&title=&width=151)
 
-其中：
-- circuits为circom电路，主要是VC电路、Keccak哈希电路、Merkel proof电路以及一些公用的工具电路。_注意这里Keccak哈希电路做了一些改造，以接受任意长度的input，原来的inputs长度不能超过blocksize=136bytes，不符合我们LeafHasher的要求（输入长度为256bytes），这里可能导致电路中算出的哈希和外部算出的不一致。_
-- fronted脚本，是对circom电路的编译逻辑，用到了circom compiler。
-- circomlib电路库，是官方提供的一些库电路。
-- output，frontend部分的输出保存在该目录下，主要是生成的r1cs文件和witness calculator文件。
-- src是主要的代码逻辑，这部分分为证书格式化、证明前端和证明后端三个部份：
-   - 证书格式化负责将用户可读的证书格式编码为证明输入格式。
+Where:
+- circuits are circom circuits, mainly including VC circuits, Keccak hash circuits, Merkel proof circuits, and some common utility circuits. Note that some modifications have been made to the Keccak hash circuit here to accept inputs of arbitrary length. The original inputs length cannot exceed blocksize=136bytes, which does not meet the requirement of our LeafHasher (input length is 256 bytes). This may cause the hash calculated in the circuit to be inconsistent with the hash calculated externally.
+- fronted script is the compilation logic for the circom circuit, using the circom compiler.
+- circomlib circuit library is some library circuits provided by the official.
+- output, the output of the frontend part is saved in this directory, mainly the generated r1cs files and witness calculator files.
+- src is the main code logic, which is divided into three parts: certificate formatting, proof frontend, and proof backend:
+
+- - Certificate formatting is responsible for encoding the user-readable certificate format into the proof input format.
 
 ```rust
 #[derive(Debug, Clone)]
@@ -105,7 +114,7 @@ pub struct EncodedVC {
 }
 ```
 
-证明前端使用circom compiler，实际调用了frontend脚本，将输入的.circom文件编译为证明后端输入r1cs以及生成witness计算代码。
+- - The proof frontend uses the circom compiler and actually calls the frontend script to compile the input .circom file into the proof backend input r1cs and generate witness calculation code.
 
 ```rust
 pub fn compile_circuit(input_file: &str, output_dir: &str) {
@@ -127,7 +136,7 @@ pub fn compile_circuit(input_file: &str, output_dir: &str) {
 }
 ```
 
-证明后端：计算witness
+- - Proof backend: Calculate witness
 
 ```rust
 pub fn cal_witness(
@@ -153,7 +162,7 @@ pub fn cal_witness(
 }
 ```
 
-使用对应的后端系统生成、验证证明
+- - Generate and verify proofs using the corresponding backend system
 
 ```rust
 pub fn gen_proof(
@@ -170,8 +179,6 @@ pub fn ver_proof(pk: &ProvingKey<Bn254>, proof: &Proof<Bn254>, public_inputs: &V
 }
 ```
 
-## 定制化
+## Note
 
-- 执行文件
-
-项目提供了示例文件`src/main.rs`，给出了一个证明证书的birth_data字段小于2000年3月4日的证明。_需要注意的是这里假设0G上存储的VC tree如上面**证书格式**章节的3层VC tree所示，仅有一个VC存储，其他均为空。
+The project provides an example file src/main.rs, which gives a proof that the birth_data field of a certificate is less than March 4, 2000. It should be noted that it is assumed here that the VC tree stored on 0G is as shown in the 3-layer VC tree in the Certificate Format section above, with only one VC stored and the rest being empty.

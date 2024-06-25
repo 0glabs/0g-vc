@@ -1,11 +1,10 @@
 #![allow(unused)]
 
-pub fn u8_to_bits(value: u8) -> Vec<bool> {
+pub fn u8_to_bits_le(value: u8) -> Vec<bool> {
     let mut bits = Vec::new();
-    for i in 0..8 {
+    for i in 0..8 { // 从低位到高位
         bits.push(value & (1 << i) != 0);
     }
-    bits.reverse(); // 需要反转，因为低位在前
     bits
 }
 

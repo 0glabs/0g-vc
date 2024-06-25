@@ -1,5 +1,7 @@
 use ark_bn254::{Fq, Fr, G1Affine as GAffine, G1Projective as GProjective};
 use std::str::FromStr;
+use sha2::{Digest, Sha256};
+use tiny_keccak::{Keccak, Hasher};
 
 #[allow(dead_code)]
 fn bits_to_bytes(bits: &[bool]) -> Vec<u8> {
@@ -101,3 +103,28 @@ pub fn pedersen_hash(input: &[bool]) -> GAffine {
 
     result.into()
 }
+
+pub fn sha(input: &[u8]) -> [u8; 32] {
+    // 创建 SHA-256 散列器
+    let mut hasher = Sha256::new();
+
+    // 将数据输入散列器
+    hasher.update(input);
+
+    let result = hasher.finalize();
+
+    let mut hash = [0u8; 32];
+    hash.copy_from_slice(&result);
+    hash
+}
+
+pub fn keccak(input: &[u8]) -> [u8; 32] {
+    
+    let mut hasher = Keccak::v256();
+    hasher.update(&input);
+    let mut result = [0u8; 32];
+    hasher.finalize(&mut result);
+
+    result
+}
+
