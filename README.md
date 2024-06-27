@@ -170,12 +170,12 @@ pub fn gen_proof(
     pk: &ProvingKey<Bn254>,
     rng: &mut impl Rng,
 ) -> Proof<Bn254> {
-    GrothBn::create_random_proof_with_reduction(circuit, pk, rng).unwrap()
+    Groth16::create_random_proof_with_reduction(circuit, pk, rng).unwrap()
 }
 
 pub fn ver_proof(pk: &ProvingKey<Bn254>, proof: &Proof<Bn254>, public_inputs: &Vec<Fr>) -> bool {
     let pvk = prepare_verifying_key(&pk.vk);
-    GrothBn::verify_proof(&pvk, proof, public_inputs).unwrap()
+    Groth16::verify_proof(&pvk, proof, public_inputs).unwrap()
 }
 ```
 

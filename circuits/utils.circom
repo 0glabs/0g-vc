@@ -1,118 +1,50 @@
-// Keccak256 hash function (ethereum version).
-// For LICENSE check https://github.com/vocdoni/keccak256-circom/blob/master/LICENSE
-
 pragma circom 2.0.0;
 
-include "../node_modules/circomlib/circuits/gates.circom";
-include "../node_modules/circomlib/circuits/sha256/xor3.circom";
-include "../node_modules/circomlib/circuits/sha256/shift.circom"; // contains ShiftRight
+template BytesToInt() {
+    signal input bytes[8];
+    signal output result;
 
-template Xor5(n) {
-    signal input a[n];
-    signal input b[n];
-    signal input c[n];
-    signal input d[n];
-    signal input e[n];
-    signal output out[n];
-    var i;
-    
-    component xor3 = Xor3(n);
-    for (i=0; i<n; i++) {
-        xor3.a[i] <== a[i];
-        xor3.b[i] <== b[i];
-        xor3.c[i] <== c[i];
+    var lc = 0;
+
+    for (var i = 0; i < 8; i++) {
+        lc += bytes[i] * (1 << (i * 8));
     }
-    component xor4 = XorArray(n);
-    for (i=0; i<n; i++) {
-        xor4.a[i] <== xor3.out[i];
-        xor4.b[i] <== d[i];
-    }
-    component xor5 = XorArray(n);
-    for (i=0; i<n; i++) {
-        xor5.a[i] <== xor4.out[i];
-        xor5.b[i] <== e[i];
-    }
-    for (i=0; i<n; i++) {
-        out[i] <== xor5.out[i];
+    result <== lc;
+}
+
+template ArraySlice(N, START, LENGTH) {
+    signal input in[N];
+    signal output out[LENGTH];
+
+    for (var i = 0; i < LENGTH; i++) {
+        out[i] <== in[START + i];
     }
 }
 
-template XorArray(n) {
-    signal input a[n];
-    signal input b[n];
-    signal output out[n];
-    var i;
+template ConcatArray(N, M) {
+    signal input in1[N], in2[M];
+    signal output out[N + M];
 
-    component aux[n];
-    for (i=0; i<n; i++) {
-        aux[i] = XOR();
-        aux[i].a <== a[i];
-        aux[i].b <== b[i];
+    for (var i = 0; i < N; i++) {
+        out[i] <== in1[i];
     }
-    for (i=0; i<n; i++) {
-        out[i] <== aux[i].out;
+
+    for (var i = 0; i < M; i++) {
+        out[N + i] <== in2[i];
     }
 }
 
-template XorArraySingle(n) {
-    signal input a[n];
-    signal output out[n];
-    var i;
+template PackHash() {
+    signal input in[256];
+    signal output out[2];
 
-    component aux[n];
-    for (i=0; i<n; i++) {
-        aux[i] = XOR();
-        aux[i].a <== a[i];
-        aux[i].b <== 1;
-    }
-    for (i=0; i<n; i++) {
-        out[i] <== aux[i].out;
-    }
+    out[0] <== Bits2Num(128)(ArraySlice(256, 0, 128)(in));
+    out[1] <== Bits2Num(128)(ArraySlice(256, 128, 128)(in));
 }
 
-template OrArray(n) {
-    signal input a[n];
-    signal input b[n];
-    signal output out[n];
-    var i;
+template UnpackHash() {
+    signal input in[2];
+    signal output out[256];
 
-    component aux[n];
-    for (i=0; i<n; i++) {
-        aux[i] = OR();
-        aux[i].a <== a[i];
-        aux[i].b <== b[i];
-    }
-    for (i=0; i<n; i++) {
-        out[i] <== aux[i].out;
-    }
-}
-
-template AndArray(n) {
-    signal input a[n];
-    signal input b[n];
-    signal output out[n];
-    var i;
-
-    component aux[n];
-    for (i=0; i<n; i++) {
-        aux[i] = AND();
-        aux[i].a <== a[i];
-        aux[i].b <== b[i];
-    }
-    for (i=0; i<n; i++) {
-        out[i] <== aux[i].out;
-    }
-}
-
-template ShL(n, r) {
-    signal input in[n];
-    signal output out[n];
-
-    for (var i=0; i<n; i++) {
-        if (i < r) {
-            out[i] <== 0;
-        } else {
-            out[i] <== in[ i-r ];
-        }
-    }
+    out <== ConcatArray(128, 128)(Num2Bits(128)(in[0]), Num2Bits(128)(in[1]));
 }
