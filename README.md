@@ -66,11 +66,11 @@ yarn build
 
 3. Run the demo
 ```bash
-cargo run --release
+cargo run -r --bin example
 ```
 If you want to enable the GPU, you can enable the cuda feature
 ```bash
-cargo run --release --features="cuda"
+cargo run -r --bin example --features="cuda"
 ```
 
 ## Project Dependencies

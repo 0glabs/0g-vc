@@ -52,7 +52,7 @@ impl Input {
 
     pub fn merkle_root(&self) -> H256 {
         let mut hash = self.data.hash();
-        for i in 0..3 {
+        for i in 0..self.merkle_proof.len() {
             hash = if self.path_index & (0x1 << i) != 0 {
                 keccak_tuple(self.merkle_proof[i], hash)
             } else {

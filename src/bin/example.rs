@@ -1,3 +1,6 @@
+use ark_bn254::{G1Affine, G2Affine};
+use ark_ec::AffineRepr;
+use ark_serialize::CanonicalSerialize;
 use chrono::NaiveDate;
 use keccak_hash::H256;
 
@@ -10,6 +13,8 @@ use vc_prove::{
     types::{Input, PublicInput, VC},
     warmup_current_thread,
 };
+
+const MERKLE_DEPTH: usize = 32;
 
 struct Sample;
 
@@ -24,7 +29,7 @@ impl Sample {
     }
 
     fn merkle_path(depth: usize) -> Vec<H256> {
-        let mut rng = XorShiftRng::seed_from_u64(24);
+        let mut rng = XorShiftRng::seed_from_u64(22);
         let mut random_hash = || {
             let mut x = H256::random_using(&mut rng);
             let (lo, hi) = x.0.split_at_mut(16);
@@ -35,7 +40,12 @@ impl Sample {
     }
 
     fn input() -> Input {
-        Input::new(Self::vc(), Self::threshold(), Self::merkle_path(32), 5)
+        Input::new(
+            Self::vc(),
+            Self::threshold(),
+            Self::merkle_path(MERKLE_DEPTH),
+            0,
+        )
     }
 
     fn public_input() -> PublicInput {

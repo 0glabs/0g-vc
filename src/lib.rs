@@ -1,5 +1,6 @@
 pub mod circuit;
 pub mod groth16;
+pub mod params;
 mod signal;
 pub mod types;
 mod utils;

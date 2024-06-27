@@ -21,6 +21,7 @@ rand = "0.8"
 rand_xorshift = "0.3"
 tiny-keccak = "2.0"
 keccak-hash = "0.10.0"
+rayon = "*"
 
 sha2 = "0.9.0"
 num-bigint = { version = "=0.4.3", default-features = false, features = ["rand"] }
@@ -30,12 +31,12 @@ num-traits = { version = "=0.2.15", default-features = false }
 
 [features]
 default = ["ark-groth16/parallel", "ark-groth16/print-trace"] # "ark-groth16/print-trace"
-# cuda = ["ark-groth16/cuda-bn254"]
+cuda = ["ark-groth16/cuda-bn254"]
 
 [patch.crates-io]
-# wasmer = { git = "https://github.com/0glabs/wasmer.git", rev = "4c2dbdc" }
-# ark-groth16 = { git = "https://github.com/0glabs/0g-groth16-gpu.git", rev = "e99b587" }
-# ark-groth16 = { path = "../0g-groth16-gpu" }
+wasmer = { git = "https://github.com/0glabs/wasmer.git", rev = "4c2dbdc" }
+ark-groth16 = { git = "https://github.com/0glabs/0g-groth16-gpu.git", rev = "e99b587" }
+ark-circom = { git = "https://github.com/0glabs/circom-compat.git", rev = "87b8855"}
 
 [[bin]]
 name = "example"

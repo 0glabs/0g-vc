@@ -1,4 +1,7 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs::{self},
+    path::PathBuf,
+};
 
 use ark_bn254::Bn254;
 use ark_circom::{CircomBuilder, CircomConfig};

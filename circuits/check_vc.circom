@@ -106,4 +106,4 @@ template VerifyVC(levels) {
     root <== MerkleTreeChecker(levels)(leafHash, pathElements, pathIndices);
 }
 
-component main {public [birthDateThreshold]} = VerifyVC(4);
+component main {public [birthDateThreshold]} = VerifyVC(32);
