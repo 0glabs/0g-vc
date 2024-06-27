@@ -1,5 +1,11 @@
-mod crypro;
-pub mod prove_backend;
-pub mod prove_frontend;
+pub mod circuit;
+pub mod groth16;
+pub mod params;
+mod signal;
+pub mod types;
 mod utils;
-pub mod vc;
+
+pub fn warmup_current_thread() {
+    #[cfg(feature = "cuda")]
+    ark_groth16::init_local_workspace();
+}

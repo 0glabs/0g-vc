@@ -9,6 +9,7 @@ include "./permutations.circom";
 template Pad(nBits) {
     signal input in[nBits];
     var blockSize = 136*8;
+    // 最后一个block只能装135bytes, 因此不是(nBits + blockSize - 1) \ blockSize;
     var nBlocks = (nBits + blockSize) \ blockSize;
     signal output out[nBlocks][blockSize];
     signal out2[blockSize];
@@ -25,21 +26,21 @@ template Pad(nBits) {
     }
     
     var remainInput = nBits - (nBlocks - 1) * blockSize;
-    for (i = 0; i < remainInput; i++) {
+    for (i=0; i<remainInput; i++) {
         out2[i] <== in[(nBlocks - 1) * blockSize + i];
     }
 
     var domain = 0x01;
-    for (i = remainInput; i < remainInput + 8; i++) {
-         out2[i] <== (domain >> i) & 1;
+    for (i=0; i<8; i++) {
+         out2[remainInput + i] <== (domain >> i) & 1;
     }
-    for (i = remainInput + 8; i < blockSize; i++) {
+    for (i=remainInput+8; i<blockSize; i++) {
         out2[i] <== 0;
     }
 
     component aux = OrArray(8);
     for (i = 0; i < 8; i++) {
-        aux.a[i] <== out2[blockSize - 8 +i];
+        aux.a[i] <== out2[blockSize - 8 + i];
         aux.b[i] <== (0x80 >> i) & 1;
     }
     for (i = 0; i < 8; i++) {
