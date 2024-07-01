@@ -58,19 +58,25 @@ template HashVC() {
     signal input encoded[input_len];
     signal output leafHash[2];
     
-    component leafHasher = Keccak(padded_input_len * 8, 256);
-    component byteTobits[input_len];
+    component vcHasher = Keccak(input_len * 8, 256);
+    component vcBits[input_len];
 
     for (var i = 0; i < input_len; i++) {
-        byteTobits[i] = Num2Bits(8);
-        byteTobits[i].in <== encoded[i];
+        vcBits[i] = Num2Bits(8);
+        vcBits[i].in <== encoded[i];
         for (var j = 0; j < 8; j++) {
-            leafHasher.in[i * 8 + j] <== byteTobits[i].out[j];
+            vcHasher.in[i * 8 + j] <== vcBits[i].out[j];
         }
     }
 
-    for (var i = input_len * 8; i < padded_input_len * 8; i++) {
-        leafHasher.in[i] <== 0;
+    component leafHasher = Keccak(padded_input_len * 8, 256);
+
+    for (var i = 0; i < padded_input_len * 8; i++) {
+        if (i < 256) {
+            leafHasher.in[i] <== vcHasher.out[i];
+        } else {
+            leafHasher.in[i] <== 0;
+        }
     }
 
     leafHash <== PackHash()(leafHasher.out);

@@ -54,7 +54,7 @@ impl ProveInput {
     }
 
     pub fn merkle_root(&self) -> H256 {
-        let mut hash = self.data.hash();
+        let mut hash = self.data.file_hash();
         for (i, &proof) in self.merkle_proof.iter().enumerate() {
             hash = if self.path_index & (0x1 << i) != 0 {
                 keccak_tuple(proof, hash)

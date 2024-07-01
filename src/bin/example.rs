@@ -1,9 +1,6 @@
 use ark_groth16::prepare_verifying_key;
 use vc_prove::{
-    circuit::circom_builder,
-    groth16::{prove, setup, verify},
-    sample::Sample,
-    warmup_current_thread,
+    circuit::circom_builder, groth16::{prove, setup, verify}, sample::Sample, warmup_current_thread
 };
 
 fn main() {
