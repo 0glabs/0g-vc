@@ -38,10 +38,15 @@ Before installing the project, ensure your system meets the following requiremen
 - **Install CUDA (optional, for GPU acceleration):**
   Download and install the CUDA 12.4 toolkit from the [NVIDIA CUDA Toolkit webpage](https://developer.nvidia.com/cuda-12-4-1-download-archive).
 
-- **Install libsnark dependencies (optional, for performance comparison):**
-  Install dependencies and build from source:
+- **Install libsnark-rust dependencies (optional, for performance comparison):**
+  Install dependencies:
   ```bash
-  sudo apt install build-essential cmake git libgmp3-dev libprocps-dev python3-markdown libboost-program-options-dev libssl-dev python3 pkg-config
+  sudo apt update
+  # libsnark dependencies
+  sudo apt install build-essential cmake git libgmp3-dev python3-markdown libboost-program-options-dev libssl-dev python3 pkg-config
+  # gmp-mpfr-sys dependencies
+  sudo apt install diffutils gcc m4 make
+  # libsnark must work with the specific gcc version
   sudo apt install gcc-10 g++-10
   ```
 
@@ -69,6 +74,16 @@ This project offers the following compilation:
   cargo build --release --features trace
   ```
 
+- **Libsnark FFI:**
+  For comparing performance with libsnark FFI, enable the libsnark feature by using the `--features libsnark` flag:
+  ```bash
+  cargo build --release --features libsnark
+  ```
+  **Note:** If you get stucked on updating submodules, try the following command:
+  ```bash
+  git config --global url."https://".insteadOf git://
+  ```
+
 Each feature can be enabled individually or combined depending on the development and debugging needs. For combined features, use:
 ```bash
 cargo build --release --features "cuda,trace"
@@ -85,7 +100,7 @@ Before running the application, it is necessary to prepare the environment and g
    yarn build
    yarn setup
    ```
-   This process may take 10 to 20 minutes or even longer, depending on your CPU performance. It may also consume a large amount of memory.
+   **Note:** This process may take 15 minutes or even longer, depending on your CPU performance. This process may consume more than 64 GB of memory. Please ensure that you have sufficient memory/virtual memory, or use a high-performance machine to generate the parameters and then copy them to others.
 
 - **Running Example Code:**
   To run the [example code](./src/bin/example.rs), especially if you wish to enable CUDA features, compile the project using the following command:
@@ -94,10 +109,13 @@ Before running the application, it is necessary to prepare the environment and g
   ```
   Add `cuda` feature if you have configured CUDA support and wish to use GPU acceleration.
 
+  **Note:** If you enable the CUDA feature, we highly recommend using a fixed thread to call the proof function and communicate with other threads via channels, rather than calling the proof function in every thread.
+
+
 - **Running libsnark Comparison Code:**
   If you have installed all necessary dependencies for libsnark as per the Prerequisites section, compile and run the libsnark comparison code:
   ```bash
-  cargo build --release --bin libsnark
+  cargo build --release --bin libsnark --features libsnark
   ```
 
 ## Code Details and Developer Interfaces
@@ -162,7 +180,7 @@ The zero-knowledge proof circuit primarily verifies the following conditions (al
 1. The VC's birthdate is later than the specified `birthdate_threshold` provided in the public inputs.
 2. The VC is legitimate data that exists on the storage flow.
 
-Note: Although the storage flow supports up to `2^64` leaves, this code only supports VCs located within the first `2^32` leaves, which is equivalent to approximately 1PB of storage.
+**Note:** Although the storage flow supports up to `2^64` leaves, this code only supports VCs located within the first `2^32` leaves, which is equivalent to approximately 1PB of storage.
 
 ## Details
 

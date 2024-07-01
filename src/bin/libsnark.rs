@@ -1,15 +1,11 @@
-use std::time::Instant;
-
-use vc_prove::{
-    circuit::circom_builder,
-    libsnark::{make_constraints, make_input},
-    sample::Sample,
-};
-
-use libsnark_rust::snark::{prove, setup, verify};
-use libsnark_rust::utils::{init_public_params, reset_profile};
-
+#[cfg(feature = "libsnark")]
 fn main() {
+    use std::time::Instant;
+
+    use libsnark_rust::snark::{prove, setup, verify};
+    use libsnark_rust::utils::{init_public_params, reset_profile};
+    use vc_prove::libsnark::{make_constraints, make_input};
+    use vc_prove::{circuit::circom_builder, sample::Sample};
     init_public_params();
 
     let mut circom = circom_builder(&"output".into(), "check_vc");
@@ -36,4 +32,9 @@ fn main() {
     assert!(res);
 
     println!("Done");
+}
+
+#[cfg(not(feature = "libsnark"))]
+fn main() {
+    println!("Cannot run since `libsnark` feature is not enabled");
 }

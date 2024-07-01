@@ -29,12 +29,13 @@ num-bigint = { version = "=0.4.3", default-features = false, features = ["rand"]
 eyre = "0.6"
 num-traits = { version = "=0.2.15", default-features = false }
 
-libsnark-rust = { git = "https://github.com/ChenxingLi/libsnark-rust.git", features = ["parallel"] }
+libsnark-rust = { git = "https://github.com/ChenxingLi/libsnark-rust.git", features = ["parallel"], optional = true }
 
 [features]
 default = ["ark-groth16/parallel"]
 cuda = ["ark-groth16/cuda-bn254"]
 trace = ["ark-groth16/print-trace"]
+libsnark = ["libsnark-rust"]
 
 [patch.crates-io]
 wasmer = { git = "https://github.com/0glabs/wasmer.git", rev = "4c2dbdc" }
