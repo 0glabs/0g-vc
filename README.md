@@ -85,7 +85,7 @@ Before running the application, it is necessary to prepare the environment and g
    yarn build
    yarn setup
    ```
-   This process may take 10 to 20 minutes or even longer, depending on your CPU performance.
+   This process may take 10 to 20 minutes or even longer, depending on your CPU performance. It may also consume a large amount of memory.
 
 - **Running Example Code:**
   To run the [example code](./src/bin/example.rs), especially if you wish to enable CUDA features, compile the project using the following command:

@@ -46,11 +46,15 @@ impl VC {
     }
 
     pub fn hash(&self) -> H256 {
-        let mut encoded_vc = self.to_bytes();
+        let encoded_vc = self.to_bytes();
         assert!(encoded_vc.len() == 79);
-
-        encoded_vc.resize(256, 0);
         keccak(&encoded_vc)
+    }
+
+    pub fn file_hash(&self) -> H256 {
+        let mut file_data = self.hash().0.to_vec();
+        file_data.resize(256, 0);
+        keccak(&file_data)
     }
 
     fn encode(&self) -> EncodedVC {
