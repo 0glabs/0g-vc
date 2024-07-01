@@ -39,13 +39,19 @@ Before installing the project, ensure your system meets the following requiremen
   Download and install the CUDA 12.4 toolkit from the [NVIDIA CUDA Toolkit webpage](https://developer.nvidia.com/cuda-12-4-1-download-archive).
 
 - **Install libsnark-rust dependencies (optional, for performance comparison):**
-  Install dependencies:
+  Update the package list
   ```bash
   sudo apt update
+  ```
+  
+  Install dependencies:
+  ```bash
   # libsnark dependencies
   sudo apt install build-essential cmake git libgmp3-dev python3-markdown libboost-program-options-dev libssl-dev python3 pkg-config
+  
   # gmp-mpfr-sys dependencies
   sudo apt install diffutils gcc m4 make
+  
   # libsnark must work with the specific gcc version
   sudo apt install gcc-10 g++-10
   ```
@@ -137,13 +143,13 @@ pub struct VC {
 }
 ```
 
-Here is an example code constructing `VC` from a json string. Note
+Here is an example code constructing `VC` from a json string. 
 ```rust
 let vc_json = r#"{"name": "Alice", "age": 25, "birth_date": "19991231", "edu_level": 4, "serial_no": "3921b15ceb8f4be8891d1de1e64af044"}"#;
 let vc = VC::from_json(vc_json).unwrap();
 ```
 
-Rust developers can also construct `VC` directly with `VC::new(...)`. Please refer to `NativeDate`'s [document](https://docs.rs/chrono/latest/chrono/) to initialize it.
+Rust developers can also construct `VC` directly with `VC::new(...)`. For the `birth_date` field, please refer to `NativeDate`'s [document](https://docs.rs/chrono/latest/chrono/struct.NaiveDate.html) to initialize it.
 
 ### Publish Verification Certificates on Chain
 
