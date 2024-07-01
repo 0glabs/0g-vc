@@ -1,7 +1,7 @@
 mod input;
 mod vc;
 
-pub use input::{Input, PublicInput};
+pub use input::{ProveInput, VerifyInput, MERKLE_DEPTH};
 pub use vc::VC;
 
 mod serial_no_format {

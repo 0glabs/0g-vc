@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{Read, Write},
+    io::{BufReader, BufWriter, Read, Write},
     path::PathBuf,
 };
 
@@ -60,7 +60,7 @@ pub fn save_key(
     key: ProvingKey<Bn254>,
 ) -> Result<(), SerializationError> {
     let file_name = current_dir.join(format!("{}.pk", name));
-    let mut writer = File::create(file_name)?;
+    let mut writer = BufWriter::new(File::create(file_name)?);
     key.vk.serialize_uncompressed(&mut writer)?;
     key.beta_g1.serialize_uncompressed(&mut writer)?;
     key.delta_g1.serialize_uncompressed(&mut writer)?;
@@ -84,7 +84,7 @@ pub fn load_proving_key<const CHECK: bool>(
     name: &str,
 ) -> Result<ProvingKey<Bn254>, SerializationError> {
     let file_name = current_dir.join(format!("{}.pk", name));
-    let mut reader = File::open(file_name).unwrap();
+    let mut reader = BufReader::new(File::open(file_name).unwrap());
 
     let check = if CHECK { Validate::Yes } else { Validate::No };
 

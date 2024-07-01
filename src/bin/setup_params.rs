@@ -1,7 +1,7 @@
 use std::{fs::File, time::Instant};
 
 use ark_bn254::Bn254;
-use ark_groth16::PreparedVerifyingKey;
+use ark_groth16::{prepare_verifying_key, PreparedVerifyingKey};
 use ark_serialize::CanonicalDeserialize;
 
 use vc_prove::{
@@ -15,13 +15,13 @@ fn main() {
     let circom = circom_builder(&"output".into(), "check_vc");
     println!("Load circuit time {:?}", start.elapsed());
 
-    let (pk, vk) = setup(&circom);
+    let pk = setup(&circom).unwrap();
+    let vk = prepare_verifying_key(&pk.vk);
 
     println!("Start save");
     save_key(&"output".into(), "check_vc", pk.clone()).unwrap();
 
     println!("Start load");
-
     let start = Instant::now();
     let reader = File::open("output/check_vc.vk").unwrap();
     let load_vk = PreparedVerifyingKey::<Bn254>::deserialize_uncompressed(reader).unwrap();

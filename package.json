@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "./build_circuit.sh"
+    "build": "./build_circuit.sh",
+    "setup": "cargo run -r --bin setup_params"
   },
   "author": "",
   "license": "ISC",

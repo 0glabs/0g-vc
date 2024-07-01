@@ -52,8 +52,9 @@ dir_path=$(dirname "$0")
 
 # 切换到文件所在的目录
 cd "$dir_path" || exit
+mkdir -p ./output
 
-if [[ $1 -eq "--install" ]]; then
+if [[ $1 == '--install' ]]; then
     install_circom
 elif [ ! -x "$(command -v circom)" ]; then
     install_circom

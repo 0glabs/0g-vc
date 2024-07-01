@@ -42,21 +42,47 @@ template MerkleTreeChecker(levels) {
     signal input leafHash[2];
     signal input pathElements[levels][2];
     signal input pathIndices[levels];
+    signal input pathLength;
     signal output root[2];
 
+    signal levelOutput[levels][2];
+
     component selectors[levels];
-    component hashers[levels];
+    // component hashers[levels];
 
     for (var i = 0; i < levels; i++) {
         selectors[i] = DualMux();
-        selectors[i].in[0] <== i == 0 ? leafHash : hashers[i - 1].hash;
+        selectors[i].in[0] <== i == 0 ? leafHash : levelOutput[i - 1];
         selectors[i].in[1] <== pathElements[i];
         selectors[i].s <== pathIndices[i];
 
-        hashers[i] = HashLeftRight();
-        hashers[i].left <== selectors[i].out[0];
-        hashers[i].right <== selectors[i].out[1];
+        levelOutput[i] <== HashLeftRight()(selectors[i].out[0], selectors[i].out[1]);
     }
 
-    root <== hashers[levels - 1].hash;
+    root <== SelectArrayElement(levels)(pathLength - 1, levelOutput);
+}
+
+
+template SelectArrayElement(n) {
+    assert(n <= 64);
+    signal input selector; 
+    signal input inputArray[n][2]; 
+    signal output out[2]; 
+
+    signal compOutput0 <== LessThan(6)([selector, n]);
+    compOutput0 === 1;
+    signal compOutput1 <== GreaterEqThan(6)([selector, 0]);
+    compOutput1 === 1;
+    
+    signal intermediates[n + 1][2];
+    signal choices[n];
+
+    intermediates[0] <== [0, 0];
+    for (var i = 0; i < n; i++) {
+        choices[i] <== IsZero()(selector - i);
+        intermediates[i + 1][0] <== intermediates[i][0] + inputArray[i][0] * choices[i];
+        intermediates[i + 1][1] <== intermediates[i][1] + inputArray[i][1] * choices[i];
+    }
+
+    out <== intermediates[n];
 }

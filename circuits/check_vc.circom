@@ -85,25 +85,22 @@ template VerifyVC(levels) {
     signal input birthDateThreshold;
     signal input pathElements[levels][2];
     signal input pathIndex;
+    signal input pathLength;
 
     // 输出信号
-    signal output leafHash[2];
     signal output root[2];
 
     component decodeVC = DecodeVC();
     decodeVC.encoded <== encodedVC;
     
-    component birthDateCheck = LessThan(64);
-    birthDateCheck.in[0] <== decodeVC.birthDateInt;
-    birthDateCheck.in[1] <== birthDateThreshold;
-    birthDateCheck.out === 1;
-
-    // bitfy
-    leafHash <== HashVC()(encodedVC);
-
-    signal pathIndices[levels] <== Num2Bits(levels)(pathIndex);
+    // Check birthday threshold
+    signal birthdayOutput <== LessThan(64)([decodeVC.birthDateInt, birthDateThreshold]);
+    birthdayOutput === 1;
+    
     // merkel proof
-    root <== MerkleTreeChecker(levels)(leafHash, pathElements, pathIndices);
+    signal pathIndices[levels] <== Num2Bits(levels)(pathIndex);
+    signal leafHash[2] <== HashVC()(encodedVC);
+    root <== MerkleTreeChecker(levels)(leafHash, pathElements, pathIndices, pathLength);
 }
 
 component main {public [birthDateThreshold]} = VerifyVC(32);

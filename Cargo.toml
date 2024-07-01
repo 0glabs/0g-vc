@@ -29,14 +29,15 @@ num-bigint = { version = "=0.4.3", default-features = false, features = ["rand"]
 eyre = "0.6"
 num-traits = { version = "=0.2.15", default-features = false }
 
+libsnark-rust = { git = "https://github.com/ChenxingLi/libsnark-rust.git", features = ["parallel"] }
+
 [features]
-default = ["ark-groth16/parallel", "ark-groth16/print-trace"] # "ark-groth16/print-trace"
+default = ["ark-groth16/parallel"]
 cuda = ["ark-groth16/cuda-bn254"]
+trace = ["ark-groth16/print-trace"]
 
 [patch.crates-io]
 wasmer = { git = "https://github.com/0glabs/wasmer.git", rev = "4c2dbdc" }
-ark-groth16 = { git = "https://github.com/0glabs/0g-groth16-gpu.git", rev = "e99b587" }
+ark-groth16 = { git = "https://github.com/0glabs/0g-groth16-gpu.git", rev = "624806e" }
+# ark-groth16 = { path = "../0g-groth16-gpu" }
 ark-circom = { git = "https://github.com/0glabs/circom-compat.git", rev = "87b8855"}
-
-[[bin]]
-name = "example"
