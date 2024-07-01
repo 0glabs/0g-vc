@@ -36,9 +36,6 @@ impl Sample {
     }
 
     pub fn public_input() -> VerifyInput {
-        VerifyInput::new(
-            Self::threshold(),
-           Self::input().merkle_root(),
-        )
+        VerifyInput::new(Self::threshold(), Self::input().merkle_root())
     }
 }

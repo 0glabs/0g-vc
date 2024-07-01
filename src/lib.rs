@@ -1,5 +1,6 @@
 pub mod circuit;
 pub mod groth16;
+#[cfg(feature = "libsnark")]
 pub mod libsnark;
 pub mod params;
 pub mod sample;
