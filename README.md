@@ -67,6 +67,7 @@ This project offers the following compilation:
   ```bash
   cargo build --release --features cuda
   ```
+  **Note:** If you enable the CUDA feature, we highly recommend using a fixed thread to call the proof function and communicate with other threads via channels, rather than calling the proof function in every thread.
 
 - **Trace Logging:**
   For more verbose output and trace logging for groth16 process, enable the trace feature by using the `--features trace` flag:
@@ -103,14 +104,11 @@ Before running the application, it is necessary to prepare the environment and g
    **Note:** This process may take 15 minutes or even longer, depending on your CPU performance. This process may consume more than 64 GB of memory. Please ensure that you have sufficient memory/virtual memory, or use a high-performance machine to generate the parameters and then copy them to others.
 
 - **Running Example Code:**
-  To run the [example code](./src/bin/example.rs), especially if you wish to enable CUDA features, compile the project using the following command:
+  To run the [example code](./src/bin/example.rs), compile the project using the following command:
   ```bash
   cargo build --release --bin example --features trace
   ```
   Add `cuda` feature if you have configured CUDA support and wish to use GPU acceleration.
-
-  **Note:** If you enable the CUDA feature, we highly recommend using a fixed thread to call the proof function and communicate with other threads via channels, rather than calling the proof function in every thread.
-
 
 - **Running libsnark Comparison Code:**
   If you have installed all necessary dependencies for libsnark as per the Prerequisites section, compile and run the libsnark comparison code:
