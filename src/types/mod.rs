@@ -1,6 +1,8 @@
+mod ext;
 mod input;
 mod vc;
 
+pub use ext::{ExtensionSignal, Extensions, NUM_EXTENSIONS};
 pub use input::{ProveInput, VerifyInput, MERKLE_DEPTH};
 pub use vc::VC;
 

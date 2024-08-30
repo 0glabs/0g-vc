@@ -1,12 +1,12 @@
 use std::{collections::HashMap, iter::repeat};
 
+use super::ext::{ExtensionSignal, Extensions};
 use ark_bn254::Fr;
 use chrono::NaiveDate;
 use keccak_hash::H256;
 use num_bigint::BigInt as CircomBigInt;
 use serde::{Deserialize, Serialize};
 
-use super::birthdate_format;
 use super::vc::VC;
 use crate::{signal::Signal, utils::keccak_tuple};
 
@@ -22,10 +22,9 @@ pub const MERKLE_DEPTH: usize = 32;
 #[derive(Serialize, Deserialize)]
 pub struct ProveInput {
     data: VC,
-    #[serde(with = "birthdate_format")]
-    birthdate_threshold: NaiveDate,
     merkle_proof: Vec<H256>,
     path_index: usize,
+    extensions: Extensions,
 }
 
 impl ProveInput {
@@ -35,9 +34,12 @@ impl ProveInput {
         merkle_proof: Vec<H256>,
         path_index: usize,
     ) -> Self {
+        let extensions = vec![ExtensionSignal::Date(birthdate_threshold)]
+            .try_into()
+            .unwrap();
         Self {
             data,
-            birthdate_threshold,
+            extensions,
             merkle_proof,
             path_index,
         }
@@ -46,7 +48,7 @@ impl ProveInput {
     pub fn to_inputs(&self) -> HashMap<String, Vec<CircomBigInt>> {
         signal_map! {
             "encodedVC" => self.data,
-            "birthDateThreshold" => self.birthdate_threshold,
+            "extensions" => self.extensions,
             "pathElements" => self.merkle_proof(),
             "pathIndex" => self.path_index,
             "pathLength" => self.merkle_length(),
@@ -82,21 +84,20 @@ impl ProveInput {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct VerifyInput {
-    #[serde(with = "birthdate_format")]
-    birthdate_threshold: NaiveDate,
     root: H256,
+    extensions: Extensions,
 }
 
 impl VerifyInput {
     pub fn new(birthdate_threshold: NaiveDate, root: H256) -> Self {
-        Self {
-            birthdate_threshold,
-            root,
-        }
+        let extensions = vec![ExtensionSignal::Date(birthdate_threshold)]
+            .try_into()
+            .unwrap();
+        Self { extensions, root }
     }
 
     pub fn to_public_inputs(&self) -> Vec<Fr> {
-        [&self.root as &dyn Signal, &self.birthdate_threshold]
+        [&self.root as &dyn Signal, &self.extensions]
             .into_iter()
             .flat_map(Signal::to_signal_fr)
             .collect()

@@ -1,12 +1,15 @@
 use ark_bn254::Fr;
-use ark_ff::PrimeField;
+use ark_ff::{PrimeField, Zero};
 use ark_std::iterable::Iterable;
 use chrono::NaiveDate;
 use keccak_hash::H256;
 use num_bigint::BigInt as CircomBigInt;
 use num_traits::Signed;
 
-use crate::{types::VC, utils::date_to_timestamp};
+use crate::{
+    types::{ExtensionSignal, Extensions, NUM_EXTENSIONS, VC},
+    utils::date_to_timestamp,
+};
 
 pub trait Signal {
     fn to_signal(&self) -> Vec<CircomBigInt>;
@@ -34,6 +37,12 @@ impl Signal for usize {
     }
 }
 
+impl Signal for u128 {
+    fn to_signal(&self) -> Vec<CircomBigInt> {
+        vec![CircomBigInt::from(*self)]
+    }
+}
+
 impl Signal for H256 {
     fn to_signal(&self) -> Vec<CircomBigInt> {
         let (lo, hi) = self.0.split_at(16);
@@ -48,6 +57,19 @@ impl Signal for H256 {
 impl Signal for Vec<H256> {
     fn to_signal(&self) -> Vec<CircomBigInt> {
         self.iter().flat_map(Signal::to_signal).collect()
+    }
+}
+
+impl Signal for Extensions {
+    fn to_signal(&self) -> Vec<CircomBigInt> {
+        self.iter()
+            .map(|x| match x {
+                ExtensionSignal::Date(date) => date.to_signal().pop().unwrap(),
+                ExtensionSignal::Number(num) => num.to_signal().pop().unwrap(),
+            })
+            .chain(std::iter::repeat(CircomBigInt::zero()))
+            .take(NUM_EXTENSIONS)
+            .collect()
     }
 }
 

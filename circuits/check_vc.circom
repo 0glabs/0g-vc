@@ -85,10 +85,11 @@ template HashVC() {
 template VerifyVC(levels) {
     // 参数：
     var vc_len = 79;
+    var num_extensions = 16;
 
     // 输入信号
     signal input encodedVC[vc_len];
-    signal input birthDateThreshold;
+    signal input extensions[num_extensions];
     signal input pathElements[levels][2];
     signal input pathIndex;
     signal input pathLength;
@@ -100,7 +101,7 @@ template VerifyVC(levels) {
     decodeVC.encoded <== encodedVC;
     
     // Check birthday threshold
-    signal birthdayOutput <== LessThan(64)([decodeVC.birthDateInt, birthDateThreshold]);
+    signal birthdayOutput <== LessThan(64)([decodeVC.birthDateInt, extensions[0]]);
     birthdayOutput === 1;
     
     // merkel proof
@@ -109,4 +110,4 @@ template VerifyVC(levels) {
     root <== MerkleTreeChecker(levels)(leafHash, pathElements, pathIndices, pathLength);
 }
 
-component main {public [birthDateThreshold]} = VerifyVC(32);
+component main {public [extensions]} = VerifyVC(32);
