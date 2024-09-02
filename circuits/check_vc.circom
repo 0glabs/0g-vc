@@ -3,6 +3,7 @@ pragma circom 2.0.0;
 // Import from @circomlib/circuits
 include "comparators.circom";
 include "bitify.circom";
+include "custom.circom";
 
 include "./keccak/keccak.circom";
 include "./merkel_proof.circom";
@@ -100,9 +101,7 @@ template VerifyVC(levels) {
     component decodeVC = DecodeVC();
     decodeVC.encoded <== encodedVC;
     
-    // Check birthday threshold
-    signal birthdayOutput <== LessThan(64)([decodeVC.birthDateInt, extensions[0]]);
-    birthdayOutput === 1;
+    CustomCheck()(decodeVC.name, decodeVC.age, decodeVC.eduLevel, decodeVC.serialNo, decodeVC.birthDateInt, extensions);
     
     // merkel proof
     signal pathIndices[levels] <== Num2Bits(levels)(pathIndex);
