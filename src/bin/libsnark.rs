@@ -5,11 +5,14 @@ fn main() {
     use libsnark_rust::snark::{prove, setup, verify};
     use libsnark_rust::utils::{init_public_params, reset_profile};
     use vc_prove::libsnark::{make_constraints, make_input};
-    use vc_prove::{circuit::circom_builder, sample::Sample};
+    use vc_prove::{circuit::circom_builder, get_zk_task_name, get_zk_task_input, sample::Sample};
     init_public_params();
 
-    let mut circom = circom_builder(&"output".into(), "check_vc");
-    let input = Sample::input();
+    let name = get_zk_task_name();
+    let command_input = get_zk_task_input();
+
+    let mut circom = circom_builder(&"output".into(), &name);
+    let input = command_input.unwrap_or_else(|| Sample::input());
     circom.inputs = input.to_inputs();
 
     println!("Make constraints and inputs");

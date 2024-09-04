@@ -13,5 +13,7 @@ template CustomCheck() {
 
     signal input extensions[num_extensions];
 
-    // 在这里放置自定义逻辑
+    // Check birthday threshold
+    signal birthdayOutput <== LessThan(64)([birthDateInt, extensions[0]]);
+    birthdayOutput === 1;
 }

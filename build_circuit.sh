@@ -56,9 +56,22 @@ mkdir -p ./output
 
 if [[ $1 == '--install' ]]; then
     install_circom
-elif [ ! -x "$(command -v circom)" ]; then
+    exit 0
+fi
+
+if [ ! -x "$(command -v circom)" ]; then
     install_circom
-    build_circuit "./circuits/check_vc.circom" output
+fi
+
+if [[ $1 == "custom" ]]; then
+    temp_dir=$(mktemp -d --suffix _custom_vc)
+    # trap "rm -rf $temp_dir" EXIT
+    echo "定制逻辑构建目录: $temp_dir"
+
+    cp -r circuits/* $temp_dir
+    cp customized/$2.circom $temp_dir/custom.circom
+    mv $temp_dir/check_vc.circom $temp_dir/$2.circom 
+    build_circuit "$temp_dir/$2.circom" output
 else
     build_circuit "./circuits/check_vc.circom" output
 fi

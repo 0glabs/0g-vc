@@ -19,7 +19,7 @@ macro_rules! signal_map {
 
 pub const MERKLE_DEPTH: usize = 32;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ProveInput {
     data: VC,
     merkle_proof: Vec<H256>,
@@ -52,6 +52,13 @@ impl ProveInput {
             "pathElements" => self.merkle_proof(),
             "pathIndex" => self.path_index,
             "pathLength" => self.merkle_length(),
+        }
+    }
+
+    pub fn to_verify_input(&self) -> VerifyInput {
+        VerifyInput {
+            root: self.merkle_root(),
+            extensions: self.extensions.clone(),
         }
     }
 

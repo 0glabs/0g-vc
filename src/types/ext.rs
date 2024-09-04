@@ -4,7 +4,7 @@ use super::birthdate_format;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum ExtensionSignal {
     Date(#[serde(with = "birthdate_format")] NaiveDate),
@@ -12,7 +12,7 @@ pub enum ExtensionSignal {
 }
 
 pub const NUM_EXTENSIONS: usize = 16;
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Extensions(Vec<ExtensionSignal>);
 
 impl TryFrom<Vec<ExtensionSignal>> for Extensions {

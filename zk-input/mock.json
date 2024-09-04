@@ -1,0 +1,20 @@
+{
+    "data": {
+        "name": "Alice",
+        "age": 25,
+        "birth_date": "20000101",
+        "edu_level": 4,
+        "serial_no": "1234567890"
+    },
+    "merkle_proof": [
+        "0x9c8e52ca76f7555771149cbcd84372549c8e52ca76f7555771149cbcd8437254",
+        "0x2ddf90a82346f547b58f7804e3ea9a112ddf90a82346f547b58f7804e3ea9a11",
+        "0x0ecb5efcadfe3664b95fbfd68fe560e60ecb5efcadfe3664b95fbfd68fe560e6"
+    ],
+    "path_index": 0,
+    "extensions": [
+        {
+            "date": "20000304"
+        }
+    ]
+}
