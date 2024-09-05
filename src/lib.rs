@@ -10,6 +10,7 @@ pub mod types;
 mod utils;
 
 pub use args::{get_zk_task_input, get_zk_task_name};
+pub use signal::Signal;
 
 pub fn warmup_current_thread() {
     #[cfg(feature = "cuda")]

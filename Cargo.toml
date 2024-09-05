@@ -24,6 +24,8 @@ keccak-hash = "0.10.0"
 rayon = "*"
 
 sha2 = "0.9.0"
+aes = "0.8" 
+ctr = "0.9"
 num-bigint = { version = "=0.4.3", default-features = false, features = ["rand"] }
 
 eyre = "0.6"
@@ -36,6 +38,10 @@ default = ["ark-groth16/parallel"]
 cuda = ["ark-groth16/cuda-bn254"]
 trace = ["ark-groth16/print-trace"]
 libsnark = ["libsnark-rust"]
+
+[profile.release]
+debug-assertions = true
+
 
 [patch.crates-io]
 wasmer = { git = "https://github.com/0glabs/wasmer.git", rev = "4c2dbdc" }

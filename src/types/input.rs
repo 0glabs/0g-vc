@@ -8,7 +8,10 @@ use num_bigint::BigInt as CircomBigInt;
 use serde::{Deserialize, Serialize};
 
 use super::vc::VC;
-use crate::{signal::Signal, utils::keccak_tuple};
+use crate::{
+    signal::{ProveInput, Signal, VerifyInput},
+    utils::keccak_tuple,
+};
 
 macro_rules! signal_map {
     ($($k:literal => $v:expr),* $(,)?) => {{
@@ -20,14 +23,14 @@ macro_rules! signal_map {
 pub const MERKLE_DEPTH: usize = 32;
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct ProveInput {
+pub struct VcProveInput {
     data: VC,
     merkle_proof: Vec<H256>,
     path_index: usize,
     extensions: Extensions,
 }
 
-impl ProveInput {
+impl VcProveInput {
     pub fn new(
         data: VC,
         birthdate_threshold: NaiveDate,
@@ -55,8 +58,8 @@ impl ProveInput {
         }
     }
 
-    pub fn to_verify_input(&self) -> VerifyInput {
-        VerifyInput {
+    pub fn to_verify_input(&self) -> VcVerifyInput {
+        VcVerifyInput {
             root: self.merkle_root(),
             extensions: self.extensions.clone(),
         }
@@ -89,13 +92,19 @@ impl ProveInput {
     }
 }
 
+impl ProveInput for VcProveInput {
+    fn to_prove_input(&self) -> HashMap<String, Vec<CircomBigInt>> {
+        self.to_inputs()
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
-pub struct VerifyInput {
+pub struct VcVerifyInput {
     root: H256,
     extensions: Extensions,
 }
 
-impl VerifyInput {
+impl VcVerifyInput {
     pub fn new(birthdate_threshold: NaiveDate, root: H256) -> Self {
         let extensions = vec![ExtensionSignal::Date(birthdate_threshold)]
             .try_into()
@@ -108,5 +117,11 @@ impl VerifyInput {
             .into_iter()
             .flat_map(Signal::to_signal_fr)
             .collect()
+    }
+}
+
+impl VerifyInput for VcVerifyInput {
+    fn to_verify_input(&self) -> Vec<Fr> {
+        self.to_public_inputs()
     }
 }

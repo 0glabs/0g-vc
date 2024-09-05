@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use ark_bn254::Fr;
 use ark_ff::{PrimeField, Zero};
 use ark_std::iterable::Iterable;
@@ -43,6 +45,12 @@ impl Signal for u128 {
     }
 }
 
+impl Signal for u8 {
+    fn to_signal(&self) -> Vec<CircomBigInt> {
+        vec![CircomBigInt::from(*self)]
+    }
+}
+
 impl Signal for H256 {
     fn to_signal(&self) -> Vec<CircomBigInt> {
         let (lo, hi) = self.0.split_at(16);
@@ -82,4 +90,32 @@ fn bitint_to_fr(int: CircomBigInt) -> Fr {
         int.to_biguint().unwrap()
     };
     Fr::from(uint)
+}
+
+pub trait ProveInput {
+    fn to_prove_input(&self) -> HashMap<String, Vec<CircomBigInt>>;
+}
+
+pub trait VerifyInput {
+    fn to_verify_input(&self) -> Vec<Fr>;
+}
+
+impl ProveInput for HashMap<String, Vec<CircomBigInt>> {
+    fn to_prove_input(&self) -> HashMap<String, Vec<CircomBigInt>> {
+        self.clone()
+    }
+}
+
+impl ProveInput for HashMap<&'static str, Vec<CircomBigInt>> {
+    fn to_prove_input(&self) -> HashMap<String, Vec<CircomBigInt>> {
+        self.iter()
+            .map(|(k, v)| (k.to_string(), v.clone()))
+            .collect()
+    }
+}
+
+impl<T: Signal> VerifyInput for T {
+    fn to_verify_input(&self) -> Vec<Fr> {
+        self.to_signal_fr()
+    }
 }

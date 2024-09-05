@@ -8,7 +8,7 @@ use vc_prove::{
     groth16::{prove, setup, verify},
     params::load_proving_key,
     sample::Sample,
-    types::ProveInput,
+    types::VcProveInput,
     warmup_current_thread,
 };
 
@@ -48,7 +48,7 @@ fn main() {
     println!("Verify");
     let public_input = command_input
         .as_ref()
-        .map_or_else(|| Sample::public_input(), ProveInput::to_verify_input);
+        .map_or_else(|| Sample::public_input(), VcProveInput::to_verify_input);
     let success = verify(&vk, &proof, &public_input).unwrap();
     assert!(success);
 

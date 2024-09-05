@@ -3,7 +3,7 @@ use ark_circom::CircomBuilder;
 use ark_groth16::{PreparedVerifyingKey, Proof, ProvingKey};
 use rand::thread_rng;
 
-use crate::types::{ProveInput, VerifyInput};
+use crate::signal::{ProveInput, VerifyInput};
 
 #[cfg(feature = "cuda")]
 type Groth16 = ark_groth16::Groth16<ark_bn254::Bn254, ark_groth16::gpu::GpuDomain<ark_bn254::Fr>>;
@@ -21,10 +21,10 @@ pub fn setup(builder: &CircomBuilder<Bn254>) -> Result<ProvingKey<Bn254>, String
 pub fn prove(
     pk: &ProvingKey<Bn254>,
     circom: &CircomBuilder<Bn254>,
-    input: ProveInput,
+    input: impl ProveInput,
 ) -> Result<Proof<Bn254>, String> {
     let mut circom = circom.clone();
-    circom.inputs = input.to_inputs();
+    circom.inputs = input.to_prove_input();
 
     let circuit = circom
         .build()
@@ -37,8 +37,8 @@ pub fn prove(
 pub fn verify(
     vk: &PreparedVerifyingKey<Bn254>,
     proof: &Proof<Bn254>,
-    public_inputs: &VerifyInput,
+    public_inputs: &impl VerifyInput,
 ) -> Result<bool, String> {
-    Groth16::verify_proof(&vk, proof, &public_inputs.to_public_inputs())
+    Groth16::verify_proof(&vk, proof, &public_inputs.to_verify_input())
         .map_err(|e| format!("Cannot verify: {:?}", e))
 }

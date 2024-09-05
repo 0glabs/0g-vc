@@ -20,6 +20,7 @@ pub fn circom_builder(current_dir: &PathBuf, name: &str) -> CircomBuilder<Bn254>
     check_file(&wtns);
     check_file(&r1cs);
 
-    let circom_config = CircomConfig::<Bn254>::new(wtns, r1cs).expect("Cannot parse circom");
+    let mut circom_config = CircomConfig::<Bn254>::new(wtns, r1cs).expect("Cannot parse circom");
+    circom_config.sanity_check = true;
     CircomBuilder::new(circom_config)
 }

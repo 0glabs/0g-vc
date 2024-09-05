@@ -1,9 +1,9 @@
 pragma circom 2.0.0;
 
 // Import from @circomlib/circuits
-include "comparators.circom";
-include "bitify.circom";
-include "custom.circom";
+include "circomlib/circuits/comparators.circom";
+include "circomlib/circuits/bitify.circom";
+include "circomlib/circuits/custom.circom";
 
 include "./keccak/keccak.circom";
 include "./merkel_proof.circom";

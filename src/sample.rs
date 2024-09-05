@@ -6,7 +6,7 @@ use keccak_hash::H256;
 use rand::SeedableRng;
 use rand_xorshift::XorShiftRng;
 
-use crate::types::{ProveInput, VerifyInput, VC};
+use crate::types::{VcProveInput, VcVerifyInput, VC};
 
 pub struct Sample;
 
@@ -31,11 +31,11 @@ impl Sample {
         (0..depth).map(|_| random_hash()).collect()
     }
 
-    pub fn input() -> ProveInput {
-        ProveInput::new(Self::vc(), Self::threshold(), Self::merkle_path(3), 0)
+    pub fn input() -> VcProveInput {
+        VcProveInput::new(Self::vc(), Self::threshold(), Self::merkle_path(3), 0)
     }
 
-    pub fn public_input() -> VerifyInput {
-        VerifyInput::new(Self::threshold(), Self::input().merkle_root())
+    pub fn public_input() -> VcVerifyInput {
+        VcVerifyInput::new(Self::threshold(), Self::input().merkle_root())
     }
 }

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "./build_circuit.sh",
-    "setup": "cargo run -r --bin setup_params",
+    "setup": "cargo run -r --bin setup_params --",
     "build:custom": "./build_circuit.sh custom",
     "setup:custom": "cargo run -r --bin setup_params --"
   },

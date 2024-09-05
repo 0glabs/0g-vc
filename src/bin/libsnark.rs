@@ -5,7 +5,7 @@ fn main() {
     use libsnark_rust::snark::{prove, setup, verify};
     use libsnark_rust::utils::{init_public_params, reset_profile};
     use vc_prove::libsnark::{make_constraints, make_input};
-    use vc_prove::{circuit::circom_builder, get_zk_task_name, get_zk_task_input, sample::Sample};
+    use vc_prove::{circuit::circom_builder, get_zk_task_input, get_zk_task_name, sample::Sample};
     init_public_params();
 
     let name = get_zk_task_name();

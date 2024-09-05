@@ -4,7 +4,7 @@ include "./keccak/keccak.circom";
 include "./utils.circom";
 
 // Import from @circomlib/circuits
-include "bitify.circom";
+include "circomlib/circuits/bitify.circom";
 
 
 template HashLeftRight() {
