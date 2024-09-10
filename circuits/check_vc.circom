@@ -3,14 +3,19 @@ pragma circom 2.0.0;
 // Import from @circomlib/circuits
 include "circomlib/circuits/comparators.circom";
 include "circomlib/circuits/bitify.circom";
-include "circomlib/circuits/custom.circom";
 
 include "./keccak/keccak.circom";
 include "./merkel_proof.circom";
 include "./utils.circom";
+include "./custom.circom";
+include "./aes/ctr.circom";
+
+function VcLen() {
+    return 79;
+}
 
 template DecodeVC() {
-    var input_len = 79; 
+    var input_len = VcLen(); 
     var name_prefix_len = 4;
     var name_len = 16;
     var age_prefix_len = 3;
@@ -53,43 +58,41 @@ template DecodeVC() {
 }
 
 template HashVC() {
-    var input_len = 79;
-    var padded_input_len = 256;
+    var input_len = VcLen();
+    var hash_len = 32;
+    var leaf_len = 256;
+    var encrypt_len = input_len + hash_len;
+    assert(16 + encrypt_len <= leaf_len);
 
     signal input encoded[input_len];
+    signal input aesKey[16];
+    signal input aesIV[16];
     signal output leafHash[2];
     
-    component vcHasher = Keccak(input_len * 8, 256);
-    component vcBits[input_len];
+    component vcHasher = Keccak(input_len * 8, hash_len * 8);
+    vcHasher.in <== BytesToBits(input_len)(encoded);
+    signal vcHashBytes[hash_len] <== BitsToBytes(hash_len)(vcHasher.out);
 
-    for (var i = 0; i < input_len; i++) {
-        vcBits[i] = Num2Bits(8);
-        vcBits[i].in <== encoded[i];
-        for (var j = 0; j < 8; j++) {
-            vcHasher.in[i * 8 + j] <== vcBits[i].out[j];
-        }
-    }
+    signal plainText[encrypt_len] <== ConcatArray(input_len, hash_len)(encoded, vcHashBytes);
+    signal cipherText[encrypt_len] <== EncryptCTR(encrypt_len, 4)(plainText, aesIV, aesKey);
 
-    component leafHasher = Keccak(padded_input_len * 8, 256);
+    signal leafContent[16 + encrypt_len] <== ConcatArray(16, encrypt_len)(aesIV, cipherText);
+    signal paddedLeaf[leaf_len] <== PadZero(16 + encrypt_len, leaf_len)(leafContent);
 
-    for (var i = 0; i < padded_input_len * 8; i++) {
-        if (i < 256) {
-            leafHasher.in[i] <== vcHasher.out[i];
-        } else {
-            leafHasher.in[i] <== 0;
-        }
-    }
-
+    component leafHasher = Keccak(leaf_len * 8, hash_len * 8);
+    leafHasher.in <== BytesToBits(leaf_len)(paddedLeaf);
     leafHash <== PackHash()(leafHasher.out);
 }
 
 template VerifyVC(levels) {
     // 参数：
-    var vc_len = 79;
+    var vc_len = VcLen();
     var num_extensions = 16;
 
     // 输入信号
     signal input encodedVC[vc_len];
+    signal input aesKey[16];
+    signal input aesIV[16];
     signal input extensions[num_extensions];
     signal input pathElements[levels][2];
     signal input pathIndex;
@@ -105,7 +108,7 @@ template VerifyVC(levels) {
     
     // merkel proof
     signal pathIndices[levels] <== Num2Bits(levels)(pathIndex);
-    signal leafHash[2] <== HashVC()(encodedVC);
+    signal leafHash[2] <== HashVC()(encodedVC, aesKey, aesIV);
     root <== MerkleTreeChecker(levels)(leafHash, pathElements, pathIndices, pathLength);
 }
 

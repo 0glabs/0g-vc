@@ -6,7 +6,7 @@ use keccak_hash::H256;
 use rand::SeedableRng;
 use rand_xorshift::XorShiftRng;
 
-use crate::types::{VcProveInput, VcVerifyInput, VC};
+use crate::types::{ByteArray, VcProveInput, VcVerifyInput, VC};
 
 pub struct Sample;
 
@@ -32,7 +32,16 @@ impl Sample {
     }
 
     pub fn input() -> VcProveInput {
-        VcProveInput::new(Self::vc(), Self::threshold(), Self::merkle_path(3), 0)
+        let key = ByteArray::new(*b"verysecretkey123");
+        let iv = ByteArray::new(*b"uniqueiv12345678");
+        VcProveInput::new(
+            Self::vc(),
+            key,
+            iv,
+            Self::threshold(),
+            Self::merkle_path(3),
+            0,
+        )
     }
 
     pub fn public_input() -> VcVerifyInput {

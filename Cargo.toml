@@ -39,9 +39,6 @@ cuda = ["ark-groth16/cuda-bn254"]
 trace = ["ark-groth16/print-trace"]
 libsnark = ["libsnark-rust"]
 
-[profile.release]
-debug-assertions = true
-
 
 [patch.crates-io]
 wasmer = { git = "https://github.com/0glabs/wasmer.git", rev = "4c2dbdc" }

@@ -31,13 +31,8 @@ function build_circuit() {
         exit 1
     fi
 
-    # 获取当前目录
-    current_dir=$(pwd)
-    # 拼接 node_modules 路径
-    circomlib_path="$current_dir/node_modules/circomlib/circuits"
-
     # 使用circom编译.circom文件,生成r1cs文件
-    circom "$input_file" --O2 -l ./node_modules/circomlib/circuits --r1cs --wasm --output "$output_dir" 
+    circom "$input_file" --O2 -l ./node_modules --r1cs --wasm --output "$output_dir" 
 
     if [ $? -eq 0 ]; then
         echo "r1cs文件生成成功,输出目录: $output_dir"

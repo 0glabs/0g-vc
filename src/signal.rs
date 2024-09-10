@@ -22,7 +22,7 @@ pub trait Signal {
 
 impl Signal for VC {
     fn to_signal(&self) -> Vec<CircomBigInt> {
-        let bytes = self.to_bytes();
+        let bytes = self.encode();
         bytes.into_iter().map(CircomBigInt::from).collect()
     }
 }

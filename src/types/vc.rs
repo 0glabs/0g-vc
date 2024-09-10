@@ -19,6 +19,7 @@ pub struct VC {
 
 const NAME_MAX_LEN: usize = 16;
 const SERIAL_MAX_LEN: usize = 32;
+pub const VC_LEN: usize = 79;
 
 impl VC {
     pub fn new(
@@ -41,14 +42,18 @@ impl VC {
         serde_json::from_str(json)
     }
 
-    pub fn to_bytes(&self) -> Vec<u8> {
-        self.encode().join()
+    pub fn hash(&self) -> H256 {
+        let encoded_vc = self.encode();
+        keccak(&encoded_vc)
     }
 
-    pub fn hash(&self) -> H256 {
-        let encoded_vc = self.to_bytes();
-        assert!(encoded_vc.len() == 79);
-        keccak(&encoded_vc)
+    pub fn plaintext(&self) -> [u8; VC_LEN + 32] {
+        let mut answer = [0u8; VC_LEN + 32];
+        let encoded_vc = self.encode();
+        answer[0..VC_LEN].copy_from_slice(&encoded_vc);
+        let digest = keccak(&encoded_vc);
+        answer[VC_LEN..VC_LEN + 32].copy_from_slice(&digest[..]);
+        answer
     }
 
     pub fn file_hash(&self) -> H256 {
@@ -57,7 +62,7 @@ impl VC {
         keccak(&file_data)
     }
 
-    fn encode(&self) -> EncodedVC {
+    pub fn encode(&self) -> [u8; VC_LEN] {
         let name_padding = encode_fixed_length(&self.name, NAME_MAX_LEN).unwrap();
         let name = with_prefix("name", name_padding);
 
@@ -78,13 +83,12 @@ impl VC {
         assert!(edu_level.len() == 1 + 3);
         assert!(serial_no.len() == SERIAL_MAX_LEN + 6);
 
-        EncodedVC {
-            name,
-            age,
-            birth_date,
-            edu_level,
-            serial_no,
-        }
+        let encoded: Vec<u8> = [name, age, birth_date, edu_level, serial_no]
+            .into_iter()
+            .flatten()
+            .collect();
+
+        encoded.try_into().unwrap()
     }
 }
 
@@ -97,31 +101,6 @@ fn with_prefix(prefix: &'static str, iter: impl IntoIterator<Item = u8>) -> Vec<
         .collect()
 }
 
-#[derive(Debug, Clone)]
-struct EncodedVC {
-    name: Vec<u8>,
-    age: Vec<u8>,
-    birth_date: Vec<u8>,
-    edu_level: Vec<u8>,
-    serial_no: Vec<u8>,
-}
-
-impl EncodedVC {
-    pub fn join(&self) -> Vec<u8> {
-        [
-            &self.name,
-            &self.age,
-            &self.birth_date,
-            &self.edu_level,
-            &self.serial_no,
-        ]
-        .into_iter()
-        .flatten()
-        .cloned()
-        .collect()
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -131,6 +110,5 @@ mod test {
         let vc = VC::from_json(vc_json).unwrap();
         let encoded_vc = vc.encode();
         println!("encoded_vc: {:?}", encoded_vc);
-        println!("encoded_vc_len: {}", encoded_vc.join().len());
     }
 }

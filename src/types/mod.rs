@@ -1,7 +1,9 @@
+mod array;
 mod ext;
 mod input;
 mod vc;
 
+pub use array::ByteArray;
 pub use ext::{ExtensionSignal, Extensions, NUM_EXTENSIONS};
 pub use input::{VcProveInput, VcVerifyInput, MERKLE_DEPTH};
 pub use vc::VC;

@@ -1,14 +1,19 @@
 use std::{collections::HashMap, iter::repeat};
 
-use super::ext::{ExtensionSignal, Extensions};
+use super::{
+    array::ByteArray,
+    ext::{ExtensionSignal, Extensions},
+    vc::VC_LEN,
+};
 use ark_bn254::Fr;
 use chrono::NaiveDate;
-use keccak_hash::H256;
+use keccak_hash::{keccak, H256};
 use num_bigint::BigInt as CircomBigInt;
 use serde::{Deserialize, Serialize};
 
 use super::vc::VC;
 use crate::{
+    aes::encrypt,
     signal::{ProveInput, Signal, VerifyInput},
     utils::keccak_tuple,
 };
@@ -24,6 +29,8 @@ pub const MERKLE_DEPTH: usize = 32;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct VcProveInput {
+    key: ByteArray<16>,
+    iv: ByteArray<16>,
     data: VC,
     merkle_proof: Vec<H256>,
     path_index: usize,
@@ -33,6 +40,8 @@ pub struct VcProveInput {
 impl VcProveInput {
     pub fn new(
         data: VC,
+        key: ByteArray<16>,
+        iv: ByteArray<16>,
         birthdate_threshold: NaiveDate,
         merkle_proof: Vec<H256>,
         path_index: usize,
@@ -42,6 +51,8 @@ impl VcProveInput {
             .unwrap();
         Self {
             data,
+            key,
+            iv,
             extensions,
             merkle_proof,
             path_index,
@@ -50,6 +61,8 @@ impl VcProveInput {
 
     pub fn to_inputs(&self) -> HashMap<String, Vec<CircomBigInt>> {
         signal_map! {
+            "aesKey" => self.key,
+            "aesIV" => self.iv,
             "encodedVC" => self.data,
             "extensions" => self.extensions,
             "pathElements" => self.merkle_proof(),
@@ -65,8 +78,28 @@ impl VcProveInput {
         }
     }
 
+    pub fn plaintext(&self) -> [u8; VC_LEN + 32] {
+        self.data.plaintext()
+    }
+
+    pub fn ciphertext(&self) -> [u8; VC_LEN + 32] {
+        let plaintext = self.data.plaintext();
+        encrypt(self.key.as_ref(), self.iv.as_ref(), &plaintext)
+    }
+
+    pub fn leaf(&self) -> [u8; 256] {
+        let mut leaf = [0u8; 256];
+        leaf[0..16].copy_from_slice(self.iv.as_ref());
+        leaf[16..16 + VC_LEN + 32].copy_from_slice(&self.ciphertext());
+        leaf
+    }
+
+    pub fn leaf_hash(&self) -> H256 {
+        keccak(self.leaf())
+    }
+
     pub fn merkle_root(&self) -> H256 {
-        let mut hash = self.data.file_hash();
+        let mut hash = self.leaf_hash();
         for (i, &proof) in self.merkle_proof.iter().enumerate() {
             hash = if self.path_index & (0x1 << i) != 0 {
                 keccak_tuple(proof, hash)

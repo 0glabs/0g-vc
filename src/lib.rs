@@ -1,3 +1,4 @@
+pub mod aes;
 pub mod args;
 pub mod circuit;
 pub mod groth16;

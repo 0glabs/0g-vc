@@ -12,6 +12,34 @@ template BytesToInt() {
     result <== lc;
 }
 
+template BytesToBits(nBytes) {
+    signal input bytes[nBytes];
+    signal output bits[nBytes * 8];
+    component toBits[nBytes];
+
+    for (var i = 0; i < nBytes; i++) {
+        toBits[i] = Num2Bits(8);
+        toBits[i].in <== bytes[i];
+        for (var j = 0; j < 8; j++) {
+            bits[i * 8 + j] <== toBits[i].out[j];
+        }
+    }
+}
+
+template BitsToBytes(nBytes) {
+    signal input bits[nBytes * 8];
+    signal output bytes[nBytes];
+    component toBytes[nBytes];
+
+    for (var i = 0; i < nBytes; i++) {
+        toBytes[i] = Bits2Num(8);
+        for (var j = 0; j < 8; j++) {
+            toBytes[i].in[j] <== bits[i * 8 + j];
+        }
+        bytes[i] <== toBytes[i].out;
+    }
+}
+
 template ArraySlice(N, START, LENGTH) {
     signal input in[N];
     signal output out[LENGTH];
@@ -31,6 +59,20 @@ template ConcatArray(N, M) {
 
     for (var i = 0; i < M; i++) {
         out[N + i] <== in2[i];
+    }
+}
+
+template PadZero(N, M) {
+    assert(N <= M);
+    signal input in[N];
+    signal output out[M];
+
+    for (var i = 0; i < N; i++) {
+        out[i] <== in[i];
+    }
+
+    for (var i = N; i < M; i++) {
+        out[i] <== 0;
     }
 }
 

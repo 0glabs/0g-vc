@@ -42,6 +42,7 @@ fn main() {
     // 2. Prove
     println!("Prove");
     let input = command_input.clone().unwrap_or_else(|| Sample::input());
+    println!("{}", &serde_json::to_string_pretty(&input).unwrap());
     let proof = prove(&pk, &circom, input).unwrap();
 
     // 3. Verify

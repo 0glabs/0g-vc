@@ -4,30 +4,19 @@ use aes::Aes128;
 use ark_groth16::prepare_verifying_key;
 use ctr::cipher::{KeyIvInit, StreamCipher};
 use ctr::Ctr32BE;
+use rand::Rng;
+use vc_prove::types::ByteArray;
 use vc_prove::{
     circuit::circom_builder,
     groth16::{prove, setup, verify},
     warmup_current_thread, Signal,
 };
-use rand::Rng;
 
-struct ByteArray<const N: usize>([u8; N]);
-
-impl<const N: usize> Signal for ByteArray<N> {
-    fn to_signal(&self) -> Vec<num_bigint::BigInt> {
-        self.0
-            .iter()
-            .map(|x| num_bigint::BigInt::from(*x))
-            .collect()
-    }
-}
-
-fn random_array<const N: usize>() -> [u8; N]{
+fn random_array<const N: usize>() -> [u8; N] {
     let mut rng = rand::thread_rng();
     let mut array = [0u8; N];
     rng.fill(&mut array[..]);
     array
-    
 }
 
 fn encrypt<const N: usize>(key: &[u8; 16], iv: &[u8; 16], plaintext: &[u8; N]) -> [u8; N] {
@@ -51,16 +40,15 @@ fn main() {
     warmup_current_thread();
     let task_name = "test_aes";
 
-    // 定义 128 位密钥和 128 位 IV (Nonce)
-    let key = b"verysecretkey124"; // 16 字节密钥 (128 位)
-    let iv = b"uniqueiv1234ffff"; // 16 字节 IV (nonce)
-    let plaintext = random_array::<128>();
+    let key = b"verysecretkey123"; 
+    let iv = &hex::decode("756e697175656976313233346666ffff").unwrap().try_into().unwrap();
+    let plaintext = random_array::<111>();
     let ciphertext = encrypt(key, iv, &plaintext);
 
     let mut input = HashMap::new();
-    input.insert("plainText", ByteArray(plaintext).to_signal());
-    input.insert("iv", ByteArray(*iv).to_signal());
-    input.insert("key", ByteArray(*key).to_signal());
+    input.insert("plainText", ByteArray::new(plaintext).to_signal());
+    input.insert("iv", ByteArray::new(*iv).to_signal());
+    input.insert("key", ByteArray::new(*key).to_signal());
 
     let circom = circom_builder(&"output".into(), &task_name);
 
@@ -76,7 +64,7 @@ fn main() {
     // 3. Verify
     println!("Verify");
 
-    let success = verify(&vk, &proof, &ByteArray(ciphertext)).unwrap();
+    let success = verify(&vk, &proof, &ByteArray::new(ciphertext)).unwrap();
     assert!(success);
 
     println!("Done");
