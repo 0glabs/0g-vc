@@ -112,4 +112,4 @@ template VerifyVC(levels) {
     root <== MerkleTreeChecker(levels)(leafHash, pathElements, pathIndices, pathLength);
 }
 
-component main {public [extensions]} = VerifyVC(32);
+component main {public [extensions]} = VerifyVC(40);

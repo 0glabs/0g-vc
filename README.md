@@ -103,9 +103,9 @@ Before running the application, it is necessary to prepare the environment and g
    **Note:** This process may take 15 minutes or even longer, depending on your CPU performance. This process may consume more than 64 GB of memory. Please ensure that you have sufficient memory/virtual memory, or use a high-performance machine to generate the parameters and then copy them to others.
 
 - **Running Example Code:**
-  To run the [example code](./src/bin/example.rs), especially if you wish to enable CUDA features, compile the project using the following command:
+  To run the [example code](./src/bin/groth16.rs), especially if you wish to enable CUDA features, compile the project using the following command:
   ```bash
-  cargo build --release --bin example --features trace
+  cargo build --release --bin groth16 --features trace
   ```
   Add `cuda` feature if you have configured CUDA support and wish to use GPU acceleration.
 

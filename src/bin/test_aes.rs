@@ -40,8 +40,11 @@ fn main() {
     warmup_current_thread();
     let task_name = "test_aes";
 
-    let key = b"verysecretkey123"; 
-    let iv = &hex::decode("756e697175656976313233346666ffff").unwrap().try_into().unwrap();
+    let key = b"verysecretkey123";
+    let iv = &hex::decode("756e697175656976313233346666ffff")
+        .unwrap()
+        .try_into()
+        .unwrap();
     let plaintext = random_array::<111>();
     let ciphertext = encrypt(key, iv, &plaintext);
 
